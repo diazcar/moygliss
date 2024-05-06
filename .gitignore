@@ -1,0 +1,8 @@
+# Files to ignore
+data/*
+notebook/*
+local
+pypmgliss-xr.yml
+# Files to keep
+!.gitkeep
+

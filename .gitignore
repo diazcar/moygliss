@@ -2,6 +2,7 @@
 data/*
 notebook/*
 local
+tmp
 pypmgliss-xr.yml
 # Files to keep
 !.gitkeep

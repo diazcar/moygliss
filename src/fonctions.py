@@ -3,6 +3,7 @@ import warnings
 import requests
 import datetime as dt
 import pandas as pd
+import numpy as np
 from src.dictionaries import (
     DATA_KEYS,
     URL_DICT,
@@ -178,3 +179,34 @@ def date_last_weekday(year, month, weekday):
         if e == weekday:
             return dm[::-1][i]
     return None
+
+
+def moyenne_gliss(data, measure_id, threshold=0.75):
+
+    pd.options.mode.chained_assignment = None
+
+    data.drop('id', axis=1, inplace=True)
+    data['data_coverage'] = (~np.isnan(data['value'])).astype(int)
+
+    data_out = data.resample('D').mean().rename(columns={'value': 'mean'})
+    data_out['max'] = data['value'].resample('D').max()
+
+    data_out.loc[
+        data_out['data_coverage'] < threshold,
+        ['mean', 'max']
+        ] = np.NaN
+
+    data_out['id'] = measure_id
+
+    return (data_out)
+
+
+def mask_aorp(data):
+    data['value'] = data.apply(
+        lambda row:
+        np.nan
+        if row['state'] not in ['A', 'O', 'R', 'P']
+        else row['value'],
+        axis=1
+    )
+    return (data[['id', 'value']])

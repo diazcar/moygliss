@@ -11,6 +11,7 @@ from src.dictionaries import  (
 
 
 from src.fonctions import (
+    mask_aorp,
     request_xr,
     build_dataframe,
     test_path,
@@ -19,7 +20,8 @@ from src.fonctions import (
     list_of_days,
     day_of_month,
     date_last_weekday,
-    time_window
+    time_window,
+    moyenne_gliss
     )
 
 
@@ -50,13 +52,19 @@ if __name__ == "__main__":
 
         )
 
-    
-    for measure in poll_site_info['id'].to_list():
-        pollsite = data[data['id'] == measure]
+    data = mask_aorp(data.set_index('date'))
 
-        (
-            moyenne_gliss,
-            max_jour,
-
-
+    data_gliss = pd.DataFrame()
+    for measure_id in poll_site_info['id'].to_list():
+        pollsite = data[data['id'] == measure_id]
+        data_gliss = pd.concat(
+            [
+                moyenne_gliss(
+                    data=data[data['id'] == id],
+                    measure_id=measure_id,
+                    threshold=0.75
+                    ).reset_index(),
+                data_gliss
+            ],
         )
+        

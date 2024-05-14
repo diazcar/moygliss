@@ -62,9 +62,9 @@ if __name__ == "__main__":
                 moyenne_gliss(
                     data=data[data['id'] == id],
                     measure_id=measure_id,
+                    poll_site_info=poll_site_info,
                     threshold=0.75
                     ).reset_index(),
                 data_gliss
             ],
         )
-        

@@ -181,7 +181,7 @@ def date_last_weekday(year, month, weekday):
     return None
 
 
-def moyenne_gliss(data, measure_id, threshold=0.75):
+def moyenne_gliss(data, measure_id, poll_site_info, threshold=0.75):
 
     pd.options.mode.chained_assignment = None
 
@@ -191,12 +191,14 @@ def moyenne_gliss(data, measure_id, threshold=0.75):
     data_out = data.resample('D').mean().rename(columns={'value': 'mean'})
     data_out['max'] = data['value'].resample('D').max()
 
-    data_out.loc[
-        data_out['data_coverage'] < threshold,
-        ['mean', 'max']
-        ] = np.NaN
+    data_out.loc[data_out['data_coverage'] < threshold, ['mean','max']] = np.NaN
 
-    data_out['id'] = measure_id
+    site_info = poll_site_info[
+        poll_site_info['id'] == measure_id
+        ].iloc[:, 1:]
+
+    for head in site_info.columns.to_list():
+        data_out[head] = site_info[head].iloc[0]
 
     return (data_out)
 

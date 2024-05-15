@@ -135,10 +135,10 @@ MATPLOT_PARAMS = {
 }
 
 URL_DICT = {
-    "data": "https://172.16.13.224:8443/dms-api/public/v1/data?",
-    "sites": "https://172.16.13.224:8443/dms-api/public/v1/sites?",
-    "physicals": "https://172.16.13.224:8443/dms-api/public/v1/physicals?",
-    "measures": "https://172.16.13.224:8443/dms-api/public/v1/measures?",
+    "data": "https://172.16.13.224:8443/dms-api/public/v2/data?",
+    "sites": "https://172.16.13.224:8443/dms-api/public/v2/sites?",
+    "physicals": "https://172.16.13.224:8443/dms-api/public/v2/physicals?",
+    "measures": "https://172.16.13.224:8443/dms-api/public/v2/measures?",
 }
 
 DATA_KEYS = {

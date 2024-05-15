@@ -14,11 +14,12 @@ def request_xr(
     fromtime: str = "",
     totime: str = "",
     folder: str = "",
-    datatypes: str = "base",
+    datatype: str = "base",
     groups: str = "",
     sites: str = "",
-    measures: str = ""
-):
+    measures: str = "",
+    header_for_df: list = None
+) -> pd.DataFrame:
     """
     Get json objects from XR rest api
 
@@ -53,7 +54,7 @@ def request_xr(
         f"from={fromtime}&"
         f"to={totime}&"
         f"sites={sites}&"
-        f"dataTypes={datatypes}&"
+        f"dataTypes={datatype}&"
         f"groups={groups}&"
         f"measures={measures}"
     )
@@ -61,14 +62,22 @@ def request_xr(
     # AVOID WARNING MESSAGE FOR CERTIFICATE SSL VERIFICATION
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        data = requests.get(url, verify=False).json()
-    return data[DATA_KEYS[folder]]
+        data = requests.get(url, verify=False).json()[DATA_KEYS[folder]]
+
+    if header_for_df:
+        data = build_dataframe(
+            data=data,
+            header=header_for_df,
+            datatype=datatype
+            )
+
+    return (data)
 
 
-def build_dataframe(data: dict, header: list):
+def build_dataframe(data: dict, header: list, datatype: str) -> pd.DataFrame:
     out_df = pd.DataFrame(columns=header)
     for i in range(len(data[:])):
-        df = pd.DataFrame(data[i]['base'])
+        df = pd.DataFrame(data[i][datatype])
 
         df["id"] = data[i]["id"]
 
@@ -91,26 +100,6 @@ def build_dataframe(data: dict, header: list):
     return (out_df)
 
 
-def get_pollsite_stats(data):
-    moyenne_gliss = (
-        data.dropna().groupby('id')
-        .resample(
-            'd',
-            on='date',
-            )
-        .mean()
-    )
-    max_jour = (
-        data.dropna().groupby('id')
-        .resample(
-            'd',
-            on='date',
-            )
-        .max()
-    )
-    return (moyenne_gliss, max_jour)
-
-
 def test_path(path: str, mode: str):
 
     if mode == "mkdir":
@@ -124,7 +113,7 @@ def test_path(path: str, mode: str):
             os.remove(path)
 
 
-def time_window(days=5):
+def time_window(days: int = 5):
     time_now = dt.datetime.now()
     time_delta = dt.timedelta(days)
 
@@ -135,7 +124,7 @@ def time_window(days=5):
     return (start_time, end_time)
 
 
-def float_none(v):
+def float_none(v: float) -> float:
     """Convert into float or None."""
     if v is None:
         return None
@@ -143,7 +132,7 @@ def float_none(v):
         return float(v)
 
 
-def test_valid(n):
+def test_valid(n: int) -> int:
     """ Return n of -999 if None. """
     if n is None:
         return -999
@@ -151,7 +140,7 @@ def test_valid(n):
         return n
 
 
-def list_of_days(start_date, end_date):
+def list_of_days(start_date: str, end_date: str):
     """ List of days between two dates. """
     dates = []
     d = start_date
@@ -161,7 +150,7 @@ def list_of_days(start_date, end_date):
         return dates
 
 
-def day_of_month(year, month):
+def day_of_month(year: int, month: int):
     """ List of days in a month. """
     di = dt.date(year, month, 1)
     if month == 12:
@@ -171,7 +160,7 @@ def day_of_month(year, month):
     return list_of_days(di, de)
 
 
-def date_last_weekday(year, month, weekday):
+def date_last_weekday(year: int, month: int, weekday: int):
     """ Date of the last weekday in a month. """
     dm = day_of_month(year, month)
     wd = [e.isoweekday() for e in dm]
@@ -181,29 +170,46 @@ def date_last_weekday(year, month, weekday):
     return None
 
 
-def moyenne_gliss(data, measure_id, poll_site_info, threshold=0.75):
+def get_rolling_data(
+        data: pd.DataFrame,
+        measure_id: str,
+        poll_site_info: pd.DataFrame,
+        threshold: int = 0.75
+        ) -> pd.DataFrame:
 
     pd.options.mode.chained_assignment = None
 
     data.drop('id', axis=1, inplace=True)
     data['data_coverage'] = (~np.isnan(data['value'])).astype(int)
 
-    data_out = data.resample('D').mean().rename(columns={'value': 'mean'})
-    data_out['max'] = data['value'].resample('D').max()
-
-    data_out.loc[data_out['data_coverage'] < threshold, ['mean','max']] = np.NaN
+    moymax_jour = data.resample('d').mean().rename(columns={'value': 'mean'})
+    moymax_jour['max'] = data['value'].resample('d').max()
+    moymax_jour.loc[
+        moymax_jour['data_coverage'] < threshold, ['mean', 'max']
+        ] = np.NaN
 
     site_info = poll_site_info[
         poll_site_info['id'] == measure_id
         ].iloc[:, 1:]
 
-    for head in site_info.columns.to_list():
-        data_out[head] = site_info[head].iloc[0]
+    add_poll_info(
+        moymax_jour,
+        site_info,
+        site_info.columns.to_list()
+        )
+    return (moymax_jour)
 
-    return (data_out)
+
+def add_poll_info(
+        data: pd.DataFrame,
+        site_info: pd.DataFrame,
+        columns: list,
+        ) -> pd.DataFrame:
+    for head in columns:
+        data[head] = site_info[head].iloc[0]
 
 
-def mask_aorp(data):
+def mask_aorp(data: pd.DataFrame) -> pd.DataFrame:
     data['value'] = data.apply(
         lambda row:
         np.nan

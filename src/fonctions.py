@@ -77,7 +77,7 @@ def request_xr(
 def build_dataframe(data: dict, header: list, datatype: str) -> pd.DataFrame:
     out_df = pd.DataFrame(columns=header)
     for i in range(len(data[:])):
-        df = pd.DataFrame(data[i][datatype])
+        df = pd.DataFrame(data[i][datatype]['data'])
 
         df["id"] = data[i]["id"]
 
@@ -113,14 +113,18 @@ def test_path(path: str, mode: str):
             os.remove(path)
 
 
-def time_window(days: int = 5):
+def time_window(days: int = 4):
     time_now = dt.datetime.now()
     time_delta = dt.timedelta(days)
 
-    end_time = time_now.strftime(format="%Y-%mm-%ddT%HH:%MM:%SSZ")
-    start_time = (time_now-time_delta).strftime(
-        format="%Y-%mm-%ddT%HH:%MM:%SSZ"
-    )
+    end_time = time_now.strftime(format="%Y-%m-%dT%H:%M:%SZ")
+    start_time = dt.datetime.combine(
+        time_now-time_delta,
+        dt.datetime.min.time()
+        ).strftime(
+            format="%Y-%m-%dT%H:%M:%SZ"
+            )
+    
     return (start_time, end_time)
 
 
@@ -168,6 +172,15 @@ def date_last_weekday(year: int, month: int, weekday: int):
         if e == weekday:
             return dm[::-1][i]
     return None
+
+
+def pas_du_range(val_end, offset, nbr_ysticks):
+    """ define step for range. """
+    space_between_ticks = int(
+        np.round((val_end+offset)/nbr_ysticks,
+                 -(len(str(int(np.round((val_end+offset)/nbr_ysticks))))-1))
+            )
+    return space_between_ticks
 
 
 def get_rolling_data(

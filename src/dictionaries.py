@@ -31,8 +31,8 @@ INFOPOLS = {
     },
     "03": {
         "nom": "NO2",
-        "lim1": 200,
-        "lim2": 400,
+        "lim1": 20,
+        "lim2": 40,
         "max": None,  # val_NO2_max + 10
         "ann": "max",
     },

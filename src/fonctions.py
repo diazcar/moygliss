@@ -124,7 +124,7 @@ def time_window(days: int = 4):
         ).strftime(
             format="%Y-%m-%dT%H:%M:%SZ"
             )
-    
+
     return (start_time, end_time)
 
 

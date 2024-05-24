@@ -1,7 +1,8 @@
 # Files to ignore
-data/*
-notebook/*
+data
+notebook
 local
+output
 tmp
 pypmgliss-xr.yml
 # Files to keep

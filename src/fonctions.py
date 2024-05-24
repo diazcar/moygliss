@@ -1,13 +1,41 @@
 import os
+import sys
 import warnings
+from matplotlib import dates, pyplot as plt, ticker
 import requests
 import datetime as dt
 import pandas as pd
 import numpy as np
 from src.dictionaries import (
     DATA_KEYS,
+    INFOPOLS,
+    JSON_PATH_LISTS,
     URL_DICT,
+    HEADER_RENAME_LISTS,
 )
+
+
+def list_of_strings(arg):
+    return arg.split(',')
+
+
+def time_window(days: int = 5):
+    time_now = dt.datetime.now()
+    time_delta = dt.timedelta(days)
+
+    end_time = dt.datetime.combine(
+        time_now,
+        dt.datetime.max.time()
+    ).strftime(format="%Y-%m-%dT%H:%M:%SZ")
+
+    start_time = dt.datetime.combine(
+        time_now-time_delta,
+        dt.datetime.min.time()
+        ).strftime(
+            format="%Y-%m-%dT%H:%M:%SZ"
+            )
+
+    return (start_time, end_time)
 
 
 def request_xr(
@@ -59,19 +87,19 @@ def request_xr(
         f"measures={measures}"
     )
 
-    # AVOID WARNING MESSAGE FOR CERTIFICATE SSL VERIFICATION
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        data = requests.get(url, verify=False).json()[DATA_KEYS[folder]]
 
-    if header_for_df:
-        data = build_dataframe(
-            data=data,
-            header=header_for_df,
-            datatype=datatype
-            )
+        request_data = requests.get(
+            url, verify=False
+            ).json()[DATA_KEYS[folder]]
 
-    return (data)
+        data = pd.json_normalize(
+            data=request_data,
+            record_path=JSON_PATH_LISTS[folder]['record_path'],
+            meta=JSON_PATH_LISTS[folder]['meta'],
+        )[list(HEADER_RENAME_LISTS[folder].keys())]
+    return (data.rename(columns=HEADER_RENAME_LISTS[folder]))
 
 
 def build_dataframe(data: dict, header: list, datatype: str) -> pd.DataFrame:
@@ -113,89 +141,18 @@ def test_path(path: str, mode: str):
             os.remove(path)
 
 
-def time_window(days: int = 4):
-    time_now = dt.datetime.now()
-    time_delta = dt.timedelta(days)
-
-    end_time = time_now.strftime(format="%Y-%m-%dT%H:%M:%SZ")
-    start_time = dt.datetime.combine(
-        time_now-time_delta,
-        dt.datetime.min.time()
-        ).strftime(
-            format="%Y-%m-%dT%H:%M:%SZ"
-            )
-
-    return (start_time, end_time)
-
-
-def float_none(v: float) -> float:
-    """Convert into float or None."""
-    if v is None:
-        return None
-    else:
-        return float(v)
-
-
-def test_valid(n: int) -> int:
-    """ Return n of -999 if None. """
-    if n is None:
-        return -999
-    else:
-        return n
-
-
-def list_of_days(start_date: str, end_date: str):
-    """ List of days between two dates. """
-    dates = []
-    d = start_date
-    while d < end_date:
-        dates.append(d)
-        d += dt.timedelta(days=1)
-        return dates
-
-
-def day_of_month(year: int, month: int):
-    """ List of days in a month. """
-    di = dt.date(year, month, 1)
-    if month == 12:
-        de = dt.date(year + 1, 1, 1)
-    else:
-        de = dt.date(year, month + 1, 1)
-    return list_of_days(di, de)
-
-
-def date_last_weekday(year: int, month: int, weekday: int):
-    """ Date of the last weekday in a month. """
-    dm = day_of_month(year, month)
-    wd = [e.isoweekday() for e in dm]
-    for i, e in enumerate(wd[::-1]):
-        if e == weekday:
-            return dm[::-1][i]
-    return None
-
-
-def pas_du_range(val_end, offset, nbr_ysticks):
-    """ define step for range. """
-    space_between_ticks = int(
-        np.round((val_end+offset)/nbr_ysticks,
-                 -(len(str(int(np.round((val_end+offset)/nbr_ysticks))))-1))
-            )
-    return space_between_ticks
-
-
-def get_rolling_data(
-        data: pd.DataFrame,
-        measure_id: str,
-        poll_site_info: pd.DataFrame,
-        threshold: int = 0.75
-        ) -> pd.DataFrame:
+def get_moymax_data(data, measure_id, poll_site_info, threshold=0.75):
 
     pd.options.mode.chained_assignment = None
 
-    data.drop('id', axis=1, inplace=True)
+    data.drop(['id'], axis=1, inplace=True)
     data['data_coverage'] = (~np.isnan(data['value'])).astype(int)
 
-    moymax_jour = data.resample('d').mean().rename(columns={'value': 'mean'})
+    moymax_jour = (
+        data.resample('d')
+        .mean()
+        .rename(columns={'value': 'mean'})
+        )
     moymax_jour['max'] = data['value'].resample('d').max()
     moymax_jour.loc[
         moymax_jour['data_coverage'] < threshold, ['mean', 'max']
@@ -203,13 +160,14 @@ def get_rolling_data(
 
     site_info = poll_site_info[
         poll_site_info['id'] == measure_id
-        ].iloc[:, 1:]
+        ]
 
     add_poll_info(
         moymax_jour,
         site_info,
         site_info.columns.to_list()
         )
+
     return (moymax_jour)
 
 
@@ -218,16 +176,144 @@ def add_poll_info(
         site_info: pd.DataFrame,
         columns: list,
         ) -> pd.DataFrame:
+
     for head in columns:
         data[head] = site_info[head].iloc[0]
 
+    return (data)
 
-def mask_aorp(data: pd.DataFrame) -> pd.DataFrame:
+
+def add_annotations(
+                measure_id: str,
+                day_data: str,
+                time_vector: pd.DatetimeIndex,
+                max_y_lim: int,
+                ax: plt.axes,
+                mode: str,
+                ):
+
+    value_day_list = day_data[
+        day_data['id'] == measure_id
+        ][mode].to_list()[1:-1]
+
+    x = time_vector[0] + dt.timedelta(hours=30)
+    y = max_y_lim - max_y_lim*0.06
+
+    for max in value_day_list:
+        if np.isnan(max) is not True:
+            ax.annotate(
+                    "%.0f" % round(max, 0),
+                    xy=(x, y),
+                    xycoords='data',
+                    fontsize=10,
+                    color='#aaaaaa',
+                    weight='bold'
+            )
+            x = x + dt.timedelta(hours=24)
+        else:
+            x = x + dt.timedelta(hours=24)
+
+
+def mask_aorp(data):
     data['value'] = data.apply(
         lambda row:
-        np.nan
-        if row['state'] not in ['A', 'O', 'R', 'P']
-        else row['value'],
-        axis=1
+            np.nan
+            if row['state'] not in ['A', 'O', 'R', 'P']
+            else row['value'],
+            axis=1
     )
-    return (data[['id', 'value']])
+    return (data[['id', 'value', 'unit']])
+
+
+def build_mpl_graph(
+                poll_iso: str,
+                measure_id: str,
+                site_name: str,
+                dept_code: str,
+                hourly_data: pd.DataFrame,
+                day_data: pd.DataFrame,
+                y_ticks: list[int,],
+                max_y_lim: int,
+                background_color: str = 'white',
+                timeseries_color: str = 'blue',
+                ) -> plt:
+
+    measure_id_data = hourly_data[hourly_data['id'] == measure_id]
+    moygliss = measure_id_data['moygliss24']
+    max_gliss = moygliss.dropna()[-24:].max()
+    data_hour = measure_id_data['value']
+    time = data_hour.reset_index()['date']
+
+    fig = plt.figure(figsize=(3, 3))
+
+    ax = fig.add_axes(
+            [0.17, 0.1, 0.8, 0.8],
+            facecolor=background_color
+            )
+    ax.plot(data_hour, timeseries_color, alpha=.25)
+    last_date_to_plot = time.searchsorted(dt.datetime.now())
+    ax.plot(moygliss.iloc[:last_date_to_plot], timeseries_color, lw=2)
+
+    for lim in ['lim1', 'lim2', 'lim3']:
+        if lim in list(INFOPOLS[poll_iso].keys()):
+            ax.plot(
+                    time,
+                    [INFOPOLS[poll_iso][lim],] * (len(moygliss)),
+                    'red',
+                    ls='--'
+            )
+            if (
+                INFOPOLS[poll_iso]['lim1'] is not None
+                and
+                max_gliss > INFOPOLS[poll_iso]['lim1']
+            ):
+                ax.update({'facecolor': (1, 0, 0, 0.07)})
+
+            if (
+                INFOPOLS[poll_iso]['lim2'] is not None
+                and
+                max_gliss > INFOPOLS[poll_iso]['lim2']
+            ):
+                ax.get_lines()[0].set_color('red')
+
+            if (
+                INFOPOLS[poll_iso]['lim3'] is not None
+                and
+                max_gliss > INFOPOLS[poll_iso]['lim3']
+            ):
+                ax.get_lines()[0].set_color('purple')
+
+    ax.xaxis.set_major_locator(dates.HourLocator(byhour=0))
+    ax.xaxis.set_minor_locator(dates.HourLocator(byhour=12))
+    ax.xaxis.set_major_formatter(ticker.NullFormatter())
+    ax.xaxis.set_minor_formatter(dates.DateFormatter('%d %b'))
+    ax.set_yticks(y_ticks)
+    ax.set_ylim(0, max_y_lim)
+    ax.set_xlim(
+            hourly_data.index[0],
+            dt.datetime.combine(
+                    hourly_data.index[-1], dt.datetime.max.time()
+                    )
+            )
+    for tick in ax.xaxis.get_minor_ticks():
+        tick.tick1line.set_markersize(0)
+        tick.tick2line.set_markersize(0)
+        tick.label1.set_horizontalalignment('center')
+
+    ax.set_title(f"{dept_code}_{site_name}")
+    ax.set_ylabel(
+        f"{INFOPOLS[poll_iso]['nom']} (\u03BCg/$m^{3}$)",
+        labelpad=2.5,
+        )
+    ax.grid(True, linestyle='--')
+
+    add_annotations(
+            measure_id=measure_id,
+            day_data=day_data,
+            time_vector=time,
+            max_y_lim=max_y_lim,
+            ax=ax,
+            mode=INFOPOLS[poll_iso]["ann"],
+            )
+
+    return (fig)

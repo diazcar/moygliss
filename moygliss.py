@@ -8,13 +8,14 @@ from tqdm import tqdm
 from src.dictionaries import (
     INFOPOLS,
     MATPLOT_PARAMS,
-    POLL_BY_SITE_LIST,
-    GROUP_LIST
+    GROUP_LIST,
+    POLL_AGG_LIST
     )
 
 from src.fonctions import (
     add_poll_info,
     build_mpl_graph,
+    compute_aggregations,
     get_moymax_data,
     mask_aorp,
     request_xr,
@@ -95,8 +96,8 @@ Then Generate a list of figures for every Group-site-pollutant.
             )
             group_data = pd.concat([group_data, data_chunk])
 
-        if group in ['V_MARS', 'V_MART']:
-            compute_metaux_lourds(group_data)
+        if group in list(POLL_AGG_LIST.keys()):
+            group_data, weights_data = compute_aggregations(group_data, group)
 
         group_moymax_data = pd.DataFrame()
         for id in group_poll_site_info['id'].to_list():
@@ -116,7 +117,7 @@ Then Generate a list of figures for every Group-site-pollutant.
         group_sites.to_csv(f"./data/{group}_sites.csv")
 
         for poll_iso in args.pollutant_iso:
-            if poll_iso not in POLL_BY_SITE_LIST:
+            if poll_iso not in POLL_AGG_LIST:
                 for_poll_list = group_poll_site_info[
                     group_poll_site_info['id_phy'] == poll_iso
                     ]
@@ -129,8 +130,7 @@ Then Generate a list of figures for every Group-site-pollutant.
                             "for sites ",
                             f"in group {group}"
                         ]
-                    )
-                ):
+                        )):
 
                     site_name = group_poll_site_info[
                         group_poll_site_info['id'] == id
@@ -144,7 +144,8 @@ Then Generate a list of figures for every Group-site-pollutant.
 
                     group_data['moygliss24'] = (
                         group_data['value']
-                        .rolling(window=24, min_periods=1).mean()
+                        .rolling(window=24, min_periods=1)
+                        .mean()
                         )
 
                     if INFOPOLS[poll_iso]['max'] is not None:

@@ -1,15 +1,16 @@
 import os
-import sys
 import warnings
 from matplotlib import dates, pyplot as plt, ticker
 import requests
 import datetime as dt
 import pandas as pd
 import numpy as np
+
 from src.dictionaries import (
     DATA_KEYS,
     INFOPOLS,
     JSON_PATH_LISTS,
+    POLL_AGG_LIST,
     URL_DICT,
     HEADER_RENAME_LISTS,
 )
@@ -175,11 +176,19 @@ def add_poll_info(
         data: pd.DataFrame,
         site_info: pd.DataFrame,
         columns: list,
+        new_col: dict = None,
         ) -> pd.DataFrame:
-
     for head in columns:
-        data[head] = site_info[head].iloc[0]
-
+        data.insert(
+            0,
+            head, site_info[head].iloc[0]
+            )
+    if new_col:
+        for head in new_col:
+            data.insert(
+                0,
+                head, new_col[head]
+                )
     return (data)
 
 
@@ -317,3 +326,80 @@ def build_mpl_graph(
             )
 
     return (fig)
+
+
+def compute_aggregations(
+        data: pd.DataFrame,
+        reseaux: str,
+):
+    iso_family = list(POLL_AGG_LIST[reseaux].keys())
+    weight_data = pd.DataFrame
+
+    for family in iso_family:
+
+        iso_list_family = POLL_AGG_LIST[reseaux][family]['iso_list']
+        sites = POLL_AGG_LIST[reseaux][family]['sites']
+
+        for site in sites:
+
+            filtered_data = data[
+                (data['id_site'] == site)
+                &
+                (data['id_phy'].isin(iso_list_family))
+                ]
+
+            weights = (
+                filtered_data['value']
+                .groupby(filtered_data.index)
+                .sum()
+                .replace(0, np.nan)
+                .to_frame()
+                .rename({'value': 'total'}, axis=1)
+            )
+
+            for head in list(filtered_data['id_phy'].unique()):
+                # CONCATENATE W8 PROBLEM
+                head_data = filtered_data[filtered_data['id_phy'] == head]
+                weights[head] = head_data['value']/weights['total']
+
+            add_poll_info(
+                data=weights,
+                site_info=filtered_data,
+                columns=['unit', 'id_site'],
+                new_col={'id_family': family}
+                )
+
+        weight_data = pd.concat([weight_data, weights])
+        data = wrap_agg_to_data(
+            data=data,
+            agg_data=weights.total,
+            unit=filtered_data.unit,
+            site_name=filtered_data.id_site,
+            physical_id=family,
+            )
+
+    return (data, weights)
+
+
+def wrap_agg_to_data(
+        data: pd.DataFrame,
+        agg_data: pd.DataFrame,
+        unit: str,
+        site_name: str,
+        physical_id: str,
+        ):
+
+    n_data = len(agg_data.values)
+    agg_df = pd.DataFrame(
+        data={
+            'id': [physical_id]*n_data,
+            'value': agg_data,
+            'unit': unit[:n_data],
+            'id_site': site_name[:n_data],
+            'id_phy': [physical_id]*n_data,
+        },
+    )
+
+    data = pd.concat([data, agg_df])
+
+    return (data)

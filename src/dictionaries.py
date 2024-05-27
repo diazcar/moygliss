@@ -215,11 +215,11 @@ COV_LOURDS = ['V4', 'VQ', 'VA', 'VU', 'VV', 'H9', 'OA',
 
 POLL_AGG_LIST = {
     'V_MART': {
-        'METAUX_LOURDS': {'sites': 'FSCB',
+        'METAUX_LOURDS': {'sites': ['FSCB'],
                           'iso_list': METAUX_LOURDS},
     },
     'V_MARS': {
-        'METAUX_LOURDS': {'sites': 'CINQAV',
+        'METAUX_LOURDS': {'sites': ['CINQAV'],
                           'iso_list': METAUX_LOURDS},
         },
     'V_COV': {

@@ -163,7 +163,7 @@ INFOPOLS = {
         "max": None,  # val_H2S', '10
         "ann": "max",
     },
-    'METAUX_LOURDS': {
+    'ML': {
         "nom": "Métaux Lourds",
         "lim1": None,
         "lim2": None,
@@ -172,23 +172,23 @@ INFOPOLS = {
         "ann": "max",
     },
     'BTEX': {
-        "nom": "Benzène, Toluène, Ethylbenzène and Xylènes",
+        "nom": "BTEX",
         "lim1": None,
         "lim2": None,
         "lim3": None,
         "max": None,
         "ann": "max",
     },
-    'COV_LEGER': {
-        "nom": "Composés Organiques Volatils Légères",
+    'COVle': {
+        "nom": "COV Légères",
         "lim1": None,
         "lim2": None,
         "lim3": None,
         "max": None,
         "ann": "max",
     },
-    'COV_LOURD': {
-        "nom": "Composés Organiques Volatils Lourds",
+    'COVlo': {
+        "nom": "COV Lourds",
         "lim1": None,
         "lim2": None,
         "lim3": None,
@@ -215,12 +215,12 @@ COV_LOURDS = ['V4', 'VQ', 'VA', 'VU', 'VV', 'H9', 'OA',
 
 POLL_AGG_LIST = {
     'V_MART': {
-        'METAUX_LOURDS': {'sites': ['FSCB'],
-                          'iso_list': METAUX_LOURDS},
+        'ML': {'sites': ['FSCB'],
+               'iso_list': METAUX_LOURDS},
     },
     'V_MARS': {
-        'METAUX_LOURDS': {'sites': ['CINQAV'],
-                          'iso_list': METAUX_LOURDS},
+        'ML': {'sites': ['CINQAV'],
+               'iso_list': METAUX_LOURDS},
         },
     'V_COV': {
         'BTEX': {
@@ -229,11 +229,11 @@ POLL_AGG_LIST = {
                       'RBRT'],
             'iso_list': BTEX
         },
-        'COV_LEGERES': {
+        'COVle': {
             'sites': ['BETG', 'MLVR', 'PDBL'],
             'iso_list': COV_LEGERES
         },
-        'COV_LOURDS': {
+        'COVlo': {
             'sites': ['BETG', 'MLVR', 'PDBL'],
             'iso_list': COV_LOURDS
         }

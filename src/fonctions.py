@@ -20,21 +20,24 @@ def list_of_strings(arg):
     return arg.split(',')
 
 
-def time_window(days: int = 5):
-    time_now = dt.datetime.now()
+def time_window(date: str = None):
+    days = 5
     time_delta = dt.timedelta(days)
+
+    if date:
+        time_now = dt.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S")
+    else:
+        time_now = dt.datetime.now()
 
     end_time = dt.datetime.combine(
         time_now,
         dt.datetime.max.time()
-    ).strftime(format="%Y-%m-%dT%H:%M:%SZ")
+        ).strftime(format="%Y-%m-%dT%H:%M:%SZ")
 
     start_time = dt.datetime.combine(
         time_now-time_delta,
         dt.datetime.min.time()
-        ).strftime(
-            format="%Y-%m-%dT%H:%M:%SZ"
-            )
+        ).strftime(format="%Y-%m-%dT%H:%M:%SZ")
 
     return (start_time, end_time)
 
@@ -333,7 +336,7 @@ def compute_aggregations(
         reseaux: str,
 ):
     iso_family = list(POLL_AGG_LIST[reseaux].keys())
-    weight_data = pd.DataFrame
+    weight_data = pd.DataFrame()
 
     for family in iso_family:
 
@@ -347,7 +350,6 @@ def compute_aggregations(
                 &
                 (data['id_phy'].isin(iso_list_family))
                 ]
-
             weights = (
                 filtered_data['value']
                 .groupby(filtered_data.index)
@@ -356,11 +358,14 @@ def compute_aggregations(
                 .to_frame()
                 .rename({'value': 'total'}, axis=1)
             )
+            # weights['id_site'] = site
 
             for head in list(filtered_data['id_phy'].unique()):
-                # CONCATENATE W8 PROBLEM
                 head_data = filtered_data[filtered_data['id_phy'] == head]
-                weights[head] = head_data['value']/weights['total']
+                if len(head_data['id'].unique()) > 1:
+                    head_data = head_data.groupby(head_data.index).sum()
+                w8 = head_data['value']/weights['total']
+                weights[head] = w8.values
 
             add_poll_info(
                 data=weights,
@@ -368,17 +373,17 @@ def compute_aggregations(
                 columns=['unit', 'id_site'],
                 new_col={'id_family': family}
                 )
+            weight_data = pd.concat([weight_data, weights])
 
-        weight_data = pd.concat([weight_data, weights])
         data = wrap_agg_to_data(
             data=data,
             agg_data=weights.total,
             unit=filtered_data.unit,
-            site_name=filtered_data.id_site,
+            site_name=weight_data.id_site.unique(),
             physical_id=family,
             )
 
-    return (data, weights)
+    return (data, weight_data)
 
 
 def wrap_agg_to_data(
@@ -388,18 +393,19 @@ def wrap_agg_to_data(
         site_name: str,
         physical_id: str,
         ):
-
     n_data = len(agg_data.values)
-    agg_df = pd.DataFrame(
-        data={
-            'id': [physical_id]*n_data,
-            'value': agg_data,
-            'unit': unit[:n_data],
-            'id_site': site_name[:n_data],
-            'id_phy': [physical_id]*n_data,
-        },
-    )
+    for site in site_name:
+        agg_df = pd.DataFrame(
+                data={
+                    'id': [f"{physical_id}{site}"]*n_data,
+                    'value': agg_data,
+                    'unit': unit[:n_data],
+                    'id_site': [site]*n_data,
+                    'id_phy': [physical_id]*n_data,
+                    'phy_name': INFOPOLS[physical_id]['nom']
+                },
+            )
 
-    data = pd.concat([data, agg_df])
+        data = pd.concat([data, agg_df])
 
     return (data)

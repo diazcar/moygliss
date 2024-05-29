@@ -121,12 +121,24 @@ if __name__ == "__main__":
         # Add iso familly aggregations and build table wiht iso's weights
         if group in list(POLL_AGG_LIST.keys()):
             group_data, weights_data = compute_aggregations(group_data, group)
+
+            # Add family info to iso's info list
+            cols = ['id', 'id_site', 'phy_name', 'id_phy', 'unit']
+            families = list(POLL_AGG_LIST[group].keys())
+            family_info = group_data[group_data['id_phy'].isin(families)][cols]
+            family_info.reset_index(drop=True, inplace=True)
+
+            group_poll_site_info = pd.concat(
+                [group_poll_site_info, family_info]
+                )
+
+            # Save Family members weights
             weights_data.to_csv(f"./data/{group}_agg_weights.csv")
 
         # ---------------------------------------------------------------------
         # Compute daily means and max and build table with poll-site-info
         group_moymax_data = pd.DataFrame()
-        for id in group_poll_site_info['id'].to_list():
+        for id in group_data['id'].unique():
             measure_id_gliss = get_moymax_data(
                 data=group_data[group_data['id'] == id][['id', 'value']],
                 measure_id=id,
@@ -183,7 +195,7 @@ if __name__ == "__main__":
                         .rolling(window=24, min_periods=1)
                         .mean()
                         )
-                    
+
                     # ---------------------------------------------------------
                     # Get overall measurement max to set graph limits
                     values = group_data[
@@ -204,7 +216,7 @@ if __name__ == "__main__":
                     y_ticks = range(0, max_val, math.ceil(max_val*0.1))
 
                     # ---------------------------------------------------------
-                    # Get overall measurement max to set graph limits
+                    # Build graph for measurement
                     plot = build_mpl_graph(
                             poll_iso=poll_iso,
                             measure_id=id,
@@ -214,10 +226,11 @@ if __name__ == "__main__":
                             day_data=group_moymax_data,
                             max_y_lim=max_y_lim,
                             y_ticks=y_ticks,
+
                     )
 
                     # ---------------------------------------------------------
-                    # Get overall measurement max to set graph limits
+                    # Save figure
                     file_name = ".".join(
                         [
                             "moygliss24h",

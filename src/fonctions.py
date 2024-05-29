@@ -212,7 +212,7 @@ def add_annotations(
     y = max_y_lim - max_y_lim*0.06
 
     for max in value_day_list:
-        if np.isnan(max) is not True:
+        if ~np.isnan(max):
             ax.annotate(
                     "%.0f" % round(max, 0),
                     xy=(x, y),
@@ -382,7 +382,8 @@ def compute_aggregations(
             site_name=weight_data.id_site.unique(),
             physical_id=family,
             )
-
+    data = data[~data.id_phy.isin(iso_list_family)]
+        
     return (data, weight_data)
 
 

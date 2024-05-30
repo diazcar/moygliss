@@ -213,6 +213,8 @@ COV_LOURDS = ['V4', 'VQ', 'VA', 'VU', 'VV', 'H9', 'OA',
               'R4', 'VR', 'VS', 'VT', 'VG', 'W6', 'VX',
               'VH', 'Vd', 'VC',]
 
+FAMILY_LIST = ['ML', 'BTEX', 'COVle', 'COVlo']
+
 POLL_AGG_LIST = {
     'V_MART': {
         'ML': {'sites': ['FSCB'],

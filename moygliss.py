@@ -119,8 +119,9 @@ if __name__ == "__main__":
 
         # ---------------------------------------------------------------------
         # Add iso familly aggregations and build table wiht iso's weights
+        weight_data = None
         if group in list(POLL_AGG_LIST.keys()):
-            group_data, weights_data = compute_aggregations(group_data, group)
+            group_data, weight_data = compute_aggregations(group_data, group)
 
             # Add family info to iso's info list
             cols = ['id', 'id_site', 'phy_name', 'id_phy', 'unit']
@@ -133,7 +134,7 @@ if __name__ == "__main__":
                 )
 
             # Save Family members weights
-            weights_data.to_csv(f"./data/{group}_agg_weights.csv")
+            weight_data.to_csv(f"./data/{group}_agg_weights.csv")
 
         # ---------------------------------------------------------------------
         # Compute daily means and max and build table with poll-site-info
@@ -224,9 +225,9 @@ if __name__ == "__main__":
                             dept_code=dept_code,
                             hourly_data=group_data.iloc[24:],
                             day_data=group_moymax_data,
+                            weight_data=weight_data,
                             max_y_lim=max_y_lim,
                             y_ticks=y_ticks,
-
                     )
 
                     # ---------------------------------------------------------

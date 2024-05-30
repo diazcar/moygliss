@@ -8,6 +8,7 @@ import numpy as np
 
 from src.dictionaries import (
     DATA_KEYS,
+    FAMILY_LIST,
     INFOPOLS,
     JSON_PATH_LISTS,
     POLL_AGG_LIST,
@@ -195,37 +196,6 @@ def add_poll_info(
     return (data)
 
 
-def add_annotations(
-                measure_id: str,
-                day_data: str,
-                time_vector: pd.DatetimeIndex,
-                max_y_lim: int,
-                ax: plt.axes,
-                mode: str,
-                ):
-
-    value_day_list = day_data[
-        day_data['id'] == measure_id
-        ][mode].to_list()[1:-1]
-
-    x = time_vector[0] + dt.timedelta(hours=30)
-    y = max_y_lim - max_y_lim*0.06
-
-    for max in value_day_list:
-        if ~np.isnan(max):
-            ax.annotate(
-                    "%.0f" % round(max, 0),
-                    xy=(x, y),
-                    xycoords='data',
-                    fontsize=10,
-                    color='#aaaaaa',
-                    weight='bold'
-            )
-            x = x + dt.timedelta(hours=24)
-        else:
-            x = x + dt.timedelta(hours=24)
-
-
 def mask_aorp(data):
     data['value'] = data.apply(
         lambda row:
@@ -248,6 +218,7 @@ def build_mpl_graph(
                 max_y_lim: int,
                 background_color: str = 'white',
                 timeseries_color: str = 'blue',
+                weight_data: pd.DataFrame = None,
                 ) -> plt:
 
     measure_id_data = hourly_data[hourly_data['id'] == measure_id]
@@ -323,12 +294,99 @@ def build_mpl_graph(
             measure_id=measure_id,
             day_data=day_data,
             time_vector=time,
-            max_y_lim=max_y_lim,
             ax=ax,
+            max_y_lim=max_y_lim,
             mode=INFOPOLS[poll_iso]["ann"],
             )
 
+    if poll_iso in FAMILY_LIST:
+        add_weight_annotations(
+            weight_data=weight_data,
+            time_vector=time,
+            measure_id=measure_id,
+            ax=ax,
+            max_y_lim=max_y_lim,
+            mode=INFOPOLS[poll_iso]["ann"],
+        )
     return (fig)
+
+
+def add_annotations(
+                measure_id: str,
+                day_data: str,
+                time_vector: pd.DatetimeIndex,
+                max_y_lim: int,
+                ax: plt.axes,
+                mode: str,
+                ):
+
+    value_day_list = day_data[
+        day_data['id'] == measure_id
+        ][mode].to_list()[1:-1]
+
+    x = time_vector[0] + dt.timedelta(hours=30)
+    y = max_y_lim - max_y_lim*0.06
+
+    for max in value_day_list:
+        if ~np.isnan(max):
+            ax.annotate(
+                    "%.0f" % round(max, 0),
+                    xy=(x, y),
+                    xycoords='data',
+                    fontsize=10,
+                    color='#aaaaaa',
+                    weight='bold'
+            )
+            x = x + dt.timedelta(hours=24)
+        else:
+            x = x + dt.timedelta(hours=24)
+
+
+def add_weight_annotations(
+        weight_data: pd.DataFrame,
+        time_vector: pd.DatetimeIndex,
+        measure_id: str,
+        ax: plt.axes,
+        max_y_lim: int,
+        mode: str,
+        ):
+    id_data = weight_data[weight_data['id'] == measure_id]
+    dtindex = id_data.resample('d')['value'].idxmax()[1]
+    drop_col_list = ['id', 'id_site', 'phy_name', 'id_phy', 'value', 'unit']
+    filtered_max_w8 = id_data.loc[dtindex].drop(drop_col_list)
+    highest_five = filtered_max_w8.reset_index()
+    highest_five.index.name = "index"
+    highest_five.rename(
+        columns={
+            highest_five.columns[0]: "iso",
+            highest_five.columns[1]: "weight"
+        },
+        inplace=True
+    )
+    highest_five = highest_five.sort_values(
+        by=['weight'],
+        ascending=False
+        ).reset_index(drop=True).head(5)
+
+    y_delta = max_y_lim*.1
+    y = max_y_lim - y_delta
+    for i in range(5):
+        iso = highest_five.iloc[i]['iso']
+        weight = highest_five.iloc[i]['weight']
+
+        x = time_vector[0] + dt.timedelta(hours=25)
+        y = y - y_delta
+
+        ax.annotate(
+            f"{iso}:{round(weight*100)}%",
+            xy=(x, y),
+            xycoords='data',
+            fontsize=7,
+            color='#aaaaaa',
+            weight='bold',
+        )
+
+    return ()
 
 
 def compute_aggregations(
@@ -356,34 +414,37 @@ def compute_aggregations(
                 .sum()
                 .replace(0, np.nan)
                 .to_frame()
-                .rename({'value': 'total'}, axis=1)
             )
-            # weights['id_site'] = site
 
             for head in list(filtered_data['id_phy'].unique()):
                 head_data = filtered_data[filtered_data['id_phy'] == head]
                 if len(head_data['id'].unique()) > 1:
                     head_data = head_data.groupby(head_data.index).sum()
-                w8 = head_data['value']/weights['total']
+                w8 = head_data['value']/weights['value']
                 weights[head] = w8.values
 
             add_poll_info(
                 data=weights,
                 site_info=filtered_data,
                 columns=['unit', 'id_site'],
-                new_col={'id_family': family}
+                new_col={
+                    'id_phy': family,
+                    'id': f"{family}{site}",
+                    'phy_name': INFOPOLS[family]['nom']
+                    }
                 )
             weight_data = pd.concat([weight_data, weights])
 
-        data = wrap_agg_to_data(
-            data=data,
-            agg_data=weights.total,
-            unit=filtered_data.unit,
-            site_name=weight_data.id_site.unique(),
-            physical_id=family,
-            )
+    data = pd.concat([data, weight_data], join='inner')
+        # wrap_agg_to_data(
+        #     data=data,
+        #     agg_data=weights.total,
+        #     unit=filtered_data.unit,
+        #     site_name=weight_data.id_site.unique(),
+        #     physical_id=family,
+        #     )
     data = data[~data.id_phy.isin(iso_list_family)]
-        
+
     return (data, weight_data)
 
 

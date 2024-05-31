@@ -11,6 +11,7 @@ from src.dictionaries import (
     FAMILY_LIST,
     INFOPOLS,
     JSON_PATH_LISTS,
+    PHYSICALS,
     POLL_AGG_LIST,
     URL_DICT,
     HEADER_RENAME_LISTS,
@@ -227,13 +228,19 @@ def build_mpl_graph(
     data_hour = measure_id_data['value']
     time = data_hour.reset_index()['date']
 
-    fig = plt.figure(figsize=(3, 3))
+    x_fig_size = 3
+    y_fig_size = 3
+    if poll_iso in FAMILY_LIST:
+        x_fig_size = 12
+
+    fig = plt.figure(figsize=(x_fig_size, y_fig_size))
 
     ax = fig.add_axes(
             [0.17, 0.1, 0.8, 0.8],
             facecolor=background_color
             )
     ax.plot(data_hour, timeseries_color, alpha=.25)
+
     last_date_to_plot = time.searchsorted(dt.datetime.now())
     ax.plot(moygliss.iloc[:last_date_to_plot], timeseries_color, lw=2)
 
@@ -286,7 +293,7 @@ def build_mpl_graph(
     ax.set_title(f"{dept_code}_{site_name}")
     ax.set_ylabel(
         f"{INFOPOLS[poll_iso]['nom']} (\u03BCg/$m^{3}$)",
-        labelpad=2.5,
+        labelpad=2,
         )
     ax.grid(True, linestyle='--')
 
@@ -334,7 +341,7 @@ def add_annotations(
                     xy=(x, y),
                     xycoords='data',
                     fontsize=10,
-                    color='#aaaaaa',
+                    color='grey',
                     weight='bold'
             )
             x = x + dt.timedelta(hours=24)
@@ -351,40 +358,51 @@ def add_weight_annotations(
         mode: str,
         ):
     id_data = weight_data[weight_data['id'] == measure_id]
-    dtindex = id_data.resample('d')['value'].idxmax()[1]
+    dtindex = id_data.resample('d')['value'].idxmax()
     drop_col_list = ['id', 'id_site', 'phy_name', 'id_phy', 'value', 'unit']
-    filtered_max_w8 = id_data.loc[dtindex].drop(drop_col_list)
-    highest_five = filtered_max_w8.reset_index()
-    highest_five.index.name = "index"
-    highest_five.rename(
-        columns={
-            highest_five.columns[0]: "iso",
-            highest_five.columns[1]: "weight"
-        },
-        inplace=True
-    )
-    highest_five = highest_five.sort_values(
-        by=['weight'],
-        ascending=False
-        ).reset_index(drop=True).head(5)
 
-    y_delta = max_y_lim*.1
-    y = max_y_lim - y_delta
-    for i in range(5):
-        iso = highest_five.iloc[i]['iso']
-        weight = highest_five.iloc[i]['weight']
+    x_delta = dt.timedelta(hours=24)
+    x = time_vector[0] + dt.timedelta(hours=24)
 
-        x = time_vector[0] + dt.timedelta(hours=25)
-        y = y - y_delta
+    for date_index in dtindex[:-1]:
+        if pd.isnull(date_index):
+            x = x + x_delta
+        else:
+            filtered_max_w8 = id_data.loc[date_index].drop(drop_col_list)
 
-        ax.annotate(
-            f"{iso}:{round(weight*100)}%",
-            xy=(x, y),
-            xycoords='data',
-            fontsize=7,
-            color='#aaaaaa',
-            weight='bold',
-        )
+            highest_five = filtered_max_w8.reset_index()
+            highest_five.index.name = "index"
+            highest_five.rename(
+                columns={
+                    highest_five.columns[0]: "iso",
+                    highest_five.columns[1]: "weight"
+                },
+                inplace=True
+            )
+            highest_five = highest_five.sort_values(
+                by=['weight'],
+                ascending=False
+                ).reset_index(drop=True).head(5)
+
+            y_delta = max_y_lim*.1
+            y = max_y_lim - y_delta
+
+            for i in range(5):
+                iso = highest_five.iloc[i]['iso']
+                weight = highest_five.iloc[i]['weight']
+
+                y = y - y_delta
+
+                ax.annotate(
+                    f"{iso} : {round(weight*100)}%",
+                    xy=(x, y),
+                    xycoords='data',
+                    fontsize=10,
+                    color='#aaaaaa',
+                    weight='bold',
+                )
+
+            x = x + x_delta
 
     return ()
 
@@ -401,13 +419,16 @@ def compute_aggregations(
         iso_list_family = POLL_AGG_LIST[reseaux][family]['iso_list']
         sites = POLL_AGG_LIST[reseaux][family]['sites']
 
-        for site in sites:
-
+        for site in sites:      
             filtered_data = data[
                 (data['id_site'] == site)
                 &
                 (data['id_phy'].isin(iso_list_family))
                 ]
+
+            if family == 'ML':
+                filtered_data['value'] = filtered_data['value']/1000
+
             weights = (
                 filtered_data['value']
                 .groupby(filtered_data.index)
@@ -418,10 +439,9 @@ def compute_aggregations(
 
             for head in list(filtered_data['id_phy'].unique()):
                 head_data = filtered_data[filtered_data['id_phy'] == head]
-                if len(head_data['id'].unique()) > 1:
-                    head_data = head_data.groupby(head_data.index).sum()
+                head_data = head_data.groupby(head_data.index).sum()
                 w8 = head_data['value']/weights['value']
-                weights[head] = w8.values
+                weights[PHYSICALS[head]['label']] = w8.values
 
             add_poll_info(
                 data=weights,
@@ -436,13 +456,6 @@ def compute_aggregations(
             weight_data = pd.concat([weight_data, weights])
 
     data = pd.concat([data, weight_data], join='inner')
-        # wrap_agg_to_data(
-        #     data=data,
-        #     agg_data=weights.total,
-        #     unit=filtered_data.unit,
-        #     site_name=weight_data.id_site.unique(),
-        #     physical_id=family,
-        #     )
     data = data[~data.id_phy.isin(iso_list_family)]
 
     return (data, weight_data)

@@ -1,5 +1,8 @@
 # Information polluants
 
+import pandas as pd
+
+
 INFOPOLS = {
     "24": {
         "nom": "PM10",
@@ -197,6 +200,8 @@ INFOPOLS = {
     },
 }
 
+PHYSICALS = pd.read_csv("./physicals.csv").set_index('id').to_dict('index')
+
 METAUX_LOURDS = ['9G', '9I', '9P', '9Q', '9R', '9S', '9T', '9U', '9V',
                  '9W', '9X', '9Y', '9a', '9c', '9d', '9e', '9g', '3Z',
                  '9h', '9i', '9p', '9q', '9s', '9u', '9v',]
@@ -323,4 +328,4 @@ DATA_KEYS = {
     "measures": "measures",
 }
 
-GROUP_LIST = ["DIDON", "V_NICE", "V_MARS", "V_MART"]
+GROUP_LIST = ["DIDON", "V_NICE", "V_MARS", "V_MART", "V_COV"]

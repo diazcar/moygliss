@@ -213,8 +213,8 @@ if __name__ == "__main__":
                         if max_val == 0:
                             max_val = 10
 
-                    max_y_lim = max_val + math.ceil(max_val*0.1)
-                    y_ticks = range(0, max_val, math.ceil(max_val*0.1))
+                    max_y_lim = max_val + math.ceil(max_val*0.2)
+                    y_ticks = range(0, max_y_lim, math.ceil(max_val*0.1))
 
                     # ---------------------------------------------------------
                     # Build graph for measurement

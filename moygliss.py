@@ -1,6 +1,6 @@
 import sys
 import matplotlib
-import numpy as np
+import numpy
 import pandas as pd
 import math
 import argparse
@@ -19,6 +19,7 @@ from src.fonctions import (
     compute_aggregations,
     get_moymax_data,
     mask_aorp,
+    pas_du_range,
     request_xr,
     test_path,
     time_window,
@@ -61,12 +62,19 @@ if __name__ == "__main__":
         default=None,
         metavar="\b",
     )
+    parser.add_argument(
+        '-o', '--output',
+        type=str,
+        help='path/to/output/figures.png',
+        default='.',
+        metavar='\b',
+    )
     args = parser.parse_args()
 
     # -------------------------------------------------------------------------
     # Create path/folder if not exist
-    test_path('./data', 'mkdir')
-    test_path('./output', 'mkdir')
+    test_path(f'{args.output}/data', 'mkdir')
+    test_path(f'{args.output}/output', 'mkdir')
 
     # Define list of files to append: for the html site mesmod
     list_of_files = []
@@ -134,7 +142,7 @@ if __name__ == "__main__":
                 )
 
             # Save Family members weights
-            weight_data.to_csv(f"./data/{group}_agg_weights.csv")
+            weight_data.to_csv(f"{args.output}/data/{group}_agg_weights.csv")
 
         # ---------------------------------------------------------------------
         # Compute daily means and max and build table with poll-site-info
@@ -152,10 +160,12 @@ if __name__ == "__main__":
 
         # ---------------------------------------------------------------------
         # Save data files to debug and exlore data used
-        group_poll_site_info.to_csv(f"./data/{group}_pollsites_info.csv")
-        group_data.to_csv(f"./data/{group}_data.csv")
-        group_moymax_data.to_csv(f"./data/{group}_moymax.csv")
-        group_sites.to_csv(f"./data/{group}_sites.csv")
+        group_poll_site_info.to_csv(
+            f"{args.output}/data/{group}_pollsites_info.csv"
+            )
+        group_data.to_csv(f"{args.output}/data/{group}_data.csv")
+        group_moymax_data.to_csv(f"{args.output}/data/{group}_moymax.csv")
+        group_sites.to_csv(f"{args.output}/data/{group}_sites.csv")
 
         # ---------------------------------------------------------------------
         # Loop of iso pollutant in dictionary $poll_agg_list
@@ -209,12 +219,14 @@ if __name__ == "__main__":
                         if INFOPOLS[poll_iso]['max'] is not None:
                             max_val = INFOPOLS[poll_iso]['max']
                         else:
-                            max_val = int(values.dropna().values.max())
+                            max_val = math.ceil(
+                                values.dropna().values.max()/10
+                                )*10
                         if max_val == 0:
                             max_val = 10
 
-                    max_y_lim = max_val + math.ceil(max_val*0.2)
-                    y_ticks = range(0, max_y_lim, math.ceil(max_val*0.1))
+                    max_y_lim = max_val + math.ceil(max_val*0.15)
+                    y_ticks = range(0, max_val, int(pas_du_range(max_val, 0, 10)))
 
                     # ---------------------------------------------------------
                     # Build graph for measurement
@@ -242,12 +254,12 @@ if __name__ == "__main__":
                             ]
                     )
 
-                    file_out = f"./output/{file_name}"
+                    file_out = f"{args.output}/output/{file_name}"
                     list_of_files.append(file_name)
                     plot.savefig(file_out)
                     matplotlib.pyplot.close()
 
-    with open("./output/list", 'w') as f:
+    with open(f"{args.output}/output/list", 'w') as f:
         for file in list_of_files:
             f.write(f"{file}\n")
 

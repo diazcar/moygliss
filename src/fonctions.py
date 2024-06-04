@@ -236,7 +236,7 @@ def build_mpl_graph(
     fig = plt.figure(figsize=(x_fig_size, y_fig_size))
 
     ax = fig.add_axes(
-            [0.17, 0.1, 0.8, 0.8],
+            [0.18, 0.1, 0.8, 0.8],
             facecolor=background_color
             )
     ax.plot(data_hour, timeseries_color, alpha=.25)
@@ -331,18 +331,22 @@ def add_annotations(
         day_data['id'] == measure_id
         ][mode].to_list()[1:-1]
 
-    x = time_vector[0] + dt.timedelta(hours=30)
+    x = time_vector[0] + dt.timedelta(hours=25)
     y = max_y_lim - max_y_lim*0.06
 
     for max in value_day_list:
+
         if ~np.isnan(max):
+            if max > 10:
+                string = f"{max: .0f}"
+            else:
+                string = f"{max: .2f}"
             ax.annotate(
-                    "%.0f" % round(max, 0),
+                    string,
                     xy=(x, y),
                     xycoords='data',
-                    fontsize=10,
+                    fontsize=8,
                     color='grey',
-                    weight='bold'
             )
             x = x + dt.timedelta(hours=24)
         else:
@@ -362,7 +366,7 @@ def add_weight_annotations(
     drop_col_list = ['id', 'id_site', 'phy_name', 'id_phy', 'value', 'unit']
 
     x_delta = dt.timedelta(hours=24)
-    x = time_vector[0] + dt.timedelta(hours=24)
+    x = time_vector[0] + dt.timedelta(hours=25)
 
     for date_index in dtindex[:-1]:
         if pd.isnull(date_index):
@@ -384,7 +388,7 @@ def add_weight_annotations(
                 ascending=False
                 ).reset_index(drop=True).head(5)
 
-            y_delta = max_y_lim*.1
+            y_delta = max_y_lim*.09
             y = max_y_lim - y_delta
 
             for i in range(5):
@@ -394,10 +398,10 @@ def add_weight_annotations(
                 y = y - y_delta
 
                 ax.annotate(
-                    f"{iso} : {round(weight*100)}%",
+                    f"{iso} : {weight*100: .0f}%",
                     xy=(x, y),
                     xycoords='data',
-                    fontsize=10,
+                    fontsize=8,
                     color='#aaaaaa',
                     weight='bold',
                 )
@@ -419,7 +423,7 @@ def compute_aggregations(
         iso_list_family = POLL_AGG_LIST[reseaux][family]['iso_list']
         sites = POLL_AGG_LIST[reseaux][family]['sites']
 
-        for site in sites:      
+        for site in sites:
             filtered_data = data[
                 (data['id_site'] == site)
                 &
@@ -484,3 +488,16 @@ def wrap_agg_to_data(
         data = pd.concat([data, agg_df])
 
     return (data)
+
+
+def pas_du_range(val_end, offset, nbr_ysticks):
+    """ define step for range. """
+    step_by_tick = (val_end+offset)/nbr_ysticks
+    nb_digits = len(str(int(np.round(step_by_tick))))-1
+    if nb_digits == 0:
+        nb_digits = 1
+    roundup = np.round(step_by_tick, -nb_digits)
+    pas = int(roundup)
+    if pas == 0:
+        pas = step_by_tick
+    return (pas)

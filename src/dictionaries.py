@@ -25,7 +25,7 @@ INFOPOLS = {
         "lim1": 12,
         "lim2": None,
         "lim3": None,
-        "max": 50,
+        "max": 60,
         "ann": "mean",
     },
     "08": {

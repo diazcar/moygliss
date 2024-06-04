@@ -5,7 +5,7 @@ local
 output
 tmp
 __pycache__
-.vscode
+.vscode/*
 pypmgliss-xr.yml
 # Files to keep
 !.gitkeep

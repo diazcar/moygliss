@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pypmgliss-xr"
+name = "moygliss"
 version = "0.1.0"
 description = "Moyennes glissantes 24h"
 authors = ["Carlos Diaz <carlos.diaz@atmosud.org>"]

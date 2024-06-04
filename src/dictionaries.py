@@ -1,5 +1,3 @@
-# Information polluants
-
 import pandas as pd
 
 

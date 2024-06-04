@@ -4,7 +4,8 @@ import pandas as pd
 import math
 import argparse
 from tqdm import tqdm
-
+import sys
+sys.path.insert(0, "./")
 from src.dictionaries import (
     INFOPOLS,
     MATPLOT_PARAMS,

@@ -5,6 +5,8 @@ import requests
 import datetime as dt
 import pandas as pd
 import numpy as np
+import sys
+sys.path.insert(0, "../")
 
 from src.dictionaries import (
     DATA_KEYS,

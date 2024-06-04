@@ -1,6 +1,5 @@
 import sys
 import matplotlib
-import numpy
 import pandas as pd
 import math
 import argparse
@@ -226,7 +225,9 @@ if __name__ == "__main__":
                             max_val = 10
 
                     max_y_lim = max_val + math.ceil(max_val*0.15)
-                    y_ticks = range(0, max_val, int(pas_du_range(max_val, 0, 10)))
+                    y_ticks = range(
+                        0, max_val, int(pas_du_range(max_val, 0, 10))
+                        )
 
                     # ---------------------------------------------------------
                     # Build graph for measurement

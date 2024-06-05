@@ -94,7 +94,7 @@ def request_xr(
         f"groups={groups}&"
         f"measures={measures}"
     )
-
+ 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
 
@@ -292,7 +292,7 @@ def build_mpl_graph(
         tick.tick2line.set_markersize(0)
         tick.label1.set_horizontalalignment('center')
 
-    ax.set_title(f"{dept_code}_{site_name}")
+    ax.set_title(f"{dept_code} {site_name}")
     ax.set_ylabel(
         f"{INFOPOLS[poll_iso]['nom']} (\u03BCg/$m^{3}$)",
         labelpad=2,
@@ -503,3 +503,41 @@ def pas_du_range(val_end, offset, nbr_ysticks):
     if pas == 0:
         pas = step_by_tick
     return (pas)
+
+
+def get_figure_title(
+    group_data: pd.DataFrame,
+    group_sites: pd.DataFrame,
+    id: str,
+):
+    """_summary_
+
+    Parameters
+    ----------
+    group_data : pd.DataFrame
+        _description_
+    group_sites : pd.DataFrame
+        _description_
+    id : str
+        _description_
+    """
+    if "MOBILE" in id:
+        name = group_data[
+            group_data['id'] == id
+            ]['id_site'].values[0]
+        site_name = group_sites[
+            group_sites['id'] == name
+            ]['labelSite'].values[0]
+        dept_code = group_sites[
+            group_sites['labelSite'] == site_name
+            ]['dept_code'].values[0]
+
+    else:
+        site_name = group_data[
+            group_data['id'] == id
+            ]['id_site'].values[0]
+        dept_code = group_sites[
+            group_sites['id'] == site_name
+            ]['dept_code'].values[0]
+
+    return (site_name, dept_code)

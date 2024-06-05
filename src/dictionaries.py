@@ -250,6 +250,7 @@ JSON_PATH_LISTS = {
     'sites': {
         'record_path': None,
         'meta': [
+            'id',
             'labelSite',
             ['address', ['department', 'id']],
         ]
@@ -280,7 +281,8 @@ JSON_PATH_LISTS = {
 
 HEADER_RENAME_LISTS = {
     'sites': {
-        'id': 'labelSite',
+        'id': 'id',
+        'labelSite': 'labelSite',
         'address.department.id': 'dept_code',
     },
     'measures': {

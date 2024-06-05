@@ -1,9 +1,9 @@
 import sys
 import matplotlib
+import numpy as np
 import pandas as pd
 import math
 import argparse
-from tqdm import tqdm
 import sys
 sys.path.insert(0, "./")
 from src.dictionaries import (
@@ -17,6 +17,7 @@ from src.fonctions import (
     add_poll_info,
     build_mpl_graph,
     compute_aggregations,
+    get_figure_title,
     get_moymax_data,
     mask_aorp,
     pas_du_range,
@@ -157,6 +158,13 @@ if __name__ == "__main__":
             group_moymax_data = pd.concat(
                 [group_moymax_data, measure_id_gliss]
                 )
+        # ---------------------------------------------------------
+        # Compute rolling mean and create "moygliss24" col. in data
+        group_data['moygliss24'] = (
+            group_data['value']
+            .rolling(window=24, min_periods=1)
+            .mean()
+            )
 
         # ---------------------------------------------------------------------
         # Save data files to debug and exlore data used
@@ -177,89 +185,81 @@ if __name__ == "__main__":
 
             measure_id = for_poll_list['id'].unique()
 
+            # ---------------------------------------------------------
+            # Get overall measurement max to set graph limits
+            values = group_data[
+                group_data['id'].isin(measure_id)
+                ]['value']
+
+            if pd.isnull(values).all():
+                max_val = 10
+            else:
+                if INFOPOLS[poll_iso]['max'] is not None:
+                    max_val = INFOPOLS[poll_iso]['max']
+                else:
+                    max_val = math.ceil(
+                        values.dropna().values.max()/10
+                        )*10
+                if max_val == 0:
+                    max_val = 10
+
+            max_y_lim = max_val + math.ceil(max_val*0.15)
+            y_ticks = range(
+                0, max_val, int(pas_du_range(max_val, 0, 10))
+                )
             # -------------------------------------------------------------
             # Loop of measurements(by site) of the iso in the group
             if len(measure_id) > 0:
-                for id in tqdm(
-                    measure_id, desc="".join(
-                        [
-                            f"Processing {poll_iso} ",
-                            "for sites ",
-                            f"in group {group}"
-                        ]
-                        )):
+                for id in measure_id:
 
-                    site_name = group_data[
-                        group_data['id'] == id
-                        ]['id_site'].values[0]
+                    test_values = group_data[group_data['id'] == id]['value']
 
-                    dept_code = group_sites[
-                        group_sites['labelSite'] == site_name
-                        ]['dept_code'].values[0]
-
-                    figure_title = f"{dept_code} {site_name}"
-
-                    # ---------------------------------------------------------
-                    # Compute rolling mean and create "moygliss24" col. in data
-                    group_data['moygliss24'] = (
-                        group_data['value']
-                        .rolling(window=24, min_periods=1)
-                        .mean()
-                        )
-
-                    # ---------------------------------------------------------
-                    # Get overall measurement max to set graph limits
-                    values = group_data[
-                        group_data['id'].isin(measure_id)
-                        ]['value']
-
-                    if pd.isnull(values).all():
-                        max_val = 10
-                    else:
-                        if INFOPOLS[poll_iso]['max'] is not None:
-                            max_val = INFOPOLS[poll_iso]['max']
-                        else:
-                            max_val = math.ceil(
-                                values.dropna().values.max()/10
-                                )*10
-                        if max_val == 0:
-                            max_val = 10
-
-                    max_y_lim = max_val + math.ceil(max_val*0.15)
-                    y_ticks = range(
-                        0, max_val, int(pas_du_range(max_val, 0, 10))
-                        )
-
-                    # ---------------------------------------------------------
-                    # Build graph for measurement
-                    plot = build_mpl_graph(
-                            poll_iso=poll_iso,
-                            measure_id=id,
-                            site_name=site_name,
-                            dept_code=dept_code,
-                            hourly_data=group_data.iloc[24:],
-                            day_data=group_moymax_data,
-                            weight_data=weight_data,
-                            max_y_lim=max_y_lim,
-                            y_ticks=y_ticks,
-                    )
-
-                    # ---------------------------------------------------------
-                    # Save figure
-                    file_name = ".".join(
-                        [
-                            "moygliss24h",
-                            group,
-                            f"{dept_code}_{site_name}",
-                            poll_iso,
-                            "png"
+                    if ~pd.isnull(test_values).all():
+                        desc = "".join(
+                            [
+                                f"Processing {poll_iso} ",
+                                "for sites ",
+                                f"in group {group} ..."
                             ]
-                    )
+                            )
+                        print(desc, end='\r')
 
-                    file_out = f"{args.output}/output/{file_name}"
-                    list_of_files.append(file_name)
-                    plot.savefig(file_out)
-                    matplotlib.pyplot.close()
+                        site_name, dept_code = get_figure_title(
+                            group_data,
+                            group_sites,
+                            id
+                        )
+
+                        # ---------------------------------------------------------
+                        # Build graph for measurement
+                        plot = build_mpl_graph(
+                                poll_iso=poll_iso,
+                                measure_id=id,
+                                site_name=site_name,
+                                dept_code=dept_code,
+                                hourly_data=group_data.iloc[24:],
+                                day_data=group_moymax_data,
+                                weight_data=weight_data,
+                                max_y_lim=max_y_lim,
+                                y_ticks=y_ticks,
+                        )
+
+                        # ---------------------------------------------------------
+                        # Save figure
+                        file_name = ".".join(
+                            [
+                                "moygliss24h",
+                                group,
+                                f"{dept_code} {site_name}",
+                                poll_iso,
+                                "png"
+                                ]
+                        )
+
+                        file_out = f"{args.output}/output/{file_name}"
+                        list_of_files.append(file_name)
+                        plot.savefig(file_out)
+                        matplotlib.pyplot.close()
 
     with open(f"{args.output}/output/list", 'w') as f:
         for file in list_of_files:

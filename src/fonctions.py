@@ -18,7 +18,7 @@ from src.dictionaries import (
     URL_DICT,
     HEADER_RENAME_LISTS,
 )
-
+TIME_NOW = dt.datetime.now()
 
 def list_of_strings(arg):
     return arg.split(',')
@@ -215,6 +215,7 @@ def build_mpl_graph(
                 measure_id: str,
                 site_name: str,
                 dept_code: str,
+                units: str,
                 hourly_data: pd.DataFrame,
                 day_data: pd.DataFrame,
                 y_ticks: list[int,],
@@ -243,7 +244,7 @@ def build_mpl_graph(
             )
     ax.plot(data_hour, timeseries_color, alpha=.25)
 
-    last_date_to_plot = time.searchsorted(dt.datetime.now())
+    last_date_to_plot = time.searchsorted(data_hour.last_valid_index())
     ax.plot(moygliss.iloc[:last_date_to_plot], timeseries_color, lw=2)
 
     for lim in ['lim1', 'lim2', 'lim3']:
@@ -294,7 +295,7 @@ def build_mpl_graph(
 
     ax.set_title(f"{dept_code} {site_name}")
     ax.set_ylabel(
-        f"{INFOPOLS[poll_iso]['nom']} (\u03BCg/$m^{3}$)",
+        f"{INFOPOLS[poll_iso]['nom']} [{units[0]}]",
         labelpad=2,
         )
     ax.grid(True, linestyle='--')
@@ -434,7 +435,7 @@ def compute_aggregations(
 
             if family == 'ML':
                 filtered_data['value'] = filtered_data['value']/1000
-
+                filtered_data['unit'] = 'μg/m3'
             weights = (
                 filtered_data['value']
                 .groupby(filtered_data.index)

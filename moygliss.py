@@ -198,14 +198,14 @@ if __name__ == "__main__":
                     max_val = INFOPOLS[poll_iso]['max']
                 else:
                     max_val = math.ceil(
-                        values.dropna().values.max()/10
-                        )*10
+                        values.dropna().values.max())
                 if max_val == 0:
                     max_val = 10
 
-            max_y_lim = max_val + math.ceil(max_val*0.15)
-            y_ticks = range(
-                0, max_val, int(pas_du_range(max_val, 0, 10))
+            max_y_lim = max_val + max_val*0.15
+            step = pas_du_range(max_val, 0, 10)
+            y_ticks = np.arange(
+                0, max_val, step
                 )
             # -------------------------------------------------------------
             # Loop of measurements(by site) of the iso in the group
@@ -213,7 +213,7 @@ if __name__ == "__main__":
                 for id in measure_id:
 
                     test_values = group_data[group_data['id'] == id]['value']
-
+                    units = group_data[group_data['id'] == id]['unit'].unique()
                     if ~pd.isnull(test_values).all():
                         desc = "".join(
                             [
@@ -237,6 +237,7 @@ if __name__ == "__main__":
                                 measure_id=id,
                                 site_name=site_name,
                                 dept_code=dept_code,
+                                units=units,
                                 hourly_data=group_data.iloc[24:],
                                 day_data=group_moymax_data,
                                 weight_data=weight_data,

@@ -1,6 +1,8 @@
 import os
 import warnings
 from matplotlib import dates, pyplot as plt, ticker
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
 import requests
 import datetime as dt
 import pandas as pd
@@ -102,7 +104,7 @@ def request_xr(
             url, verify=False
             ).json()[DATA_KEYS[folder]]
 
-        data = pd.json_normalize(
+        data = pd.io.json.json_normalize(
             data=request_data,
             record_path=JSON_PATH_LISTS[folder]['record_path'],
             meta=JSON_PATH_LISTS[folder]['meta'],
@@ -460,7 +462,7 @@ def compute_aggregations(
                     'phy_name': INFOPOLS[family]['nom']
                     }
                 )
-            weight_data = pd.concat([weight_data, weights])
+            weight_data = pd.concat([weight_data, weights], sort=False)
 
     data = pd.concat([data, weight_data], join='inner')
     data = data[~data.id_phy.isin(iso_list_family)]

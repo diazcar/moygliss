@@ -1,8 +1,6 @@
 import os
 import warnings
 from matplotlib import dates, pyplot as plt, ticker
-from pandas.plotting import register_matplotlib_converters
-register_matplotlib_converters()
 import requests
 import datetime as dt
 import pandas as pd

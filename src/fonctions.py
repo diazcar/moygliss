@@ -218,11 +218,11 @@ def build_mpl_graph(
                 units: str,
                 hourly_data: pd.DataFrame,
                 day_data: pd.DataFrame,
-                y_ticks: list[int,],
+                y_ticks: list,
                 max_y_lim: int,
                 background_color: str = 'white',
                 timeseries_color: str = 'blue',
-                weight_data: pd.DataFrame = None,
+                weight_data=None,
                 ) -> plt:
 
     measure_id_data = hourly_data[hourly_data['id'] == measure_id]

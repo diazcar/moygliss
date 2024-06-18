@@ -1,3 +1,4 @@
+import math
 import os
 import warnings
 from matplotlib import dates, pyplot as plt, ticker
@@ -375,12 +376,13 @@ def build_mpl_graph(
             [0.18, 0.1, 0.8, 0.8],
             facecolor=background_color
             )
-    ax.plot(data_hour, timeseries_color, alpha=.25)
+    ax.plot(data_hour, timeseries_color, alpha=.35)
     last_valid_time = data_hour.last_valid_index()
     # last_date_to_plot = time.searchsorted(data_hour.last_valid_index())
     ax.plot(moygliss[:last_valid_time], timeseries_color, lw=2)
 
-    max_gliss = moygliss[:last_valid_time].dropna()[-24:].max()
+    window_gliss_data = moygliss[:last_valid_time]
+    max_gliss = window_gliss_data[-24:].dropna().max()
     for lim in ['lim1', 'lim2', 'lim3']:
         if lim in list(INFOPOLS[poll_iso].keys()):
             ax.plot(
@@ -394,7 +396,15 @@ def build_mpl_graph(
                 and
                 max_gliss > INFOPOLS[poll_iso]['lim1']
             ):
-                ax.update({'facecolor': (1, 0, 0, 0.07)})
+                ax.update({'facecolor': (1, 0, 0, 0.05)})
+                ax.get_lines()[1].set_color('red')
+
+            if (
+                INFOPOLS[poll_iso]['lim1'] is not None
+                and
+                max_jour_j > INFOPOLS[poll_iso]['lim1']
+            ):
+                ax.get_lines()[0].set_color('red')
 
             if (
                 INFOPOLS[poll_iso]['lim2'] is not None
@@ -402,6 +412,7 @@ def build_mpl_graph(
                 max_jour_j > INFOPOLS[poll_iso]['lim2']
             ):
                 ax.get_lines()[0].set_color('red')
+                ax.update({'facecolor': (1, 0, 0, 0.05)})
 
             if (
                 INFOPOLS[poll_iso]['lim3'] is not None
@@ -854,3 +865,48 @@ def get_family_day_max(
         )
 
     return (day_maxes.values[1:])
+
+
+def get_iso_max_val(
+        poll_iso: str,
+        measure_id: str,
+        group_data: pd.DataFrame,
+        ) -> int:
+    """_summary_
+
+    Parameters
+    ----------
+    measure_id : str
+        _description_
+    group_data : pd.DataFrame
+        _description_
+
+    Returns
+    -------
+    int
+        _description_
+    """
+
+    if len(measure_id) > 0:
+        values = group_data[
+            group_data['id'].isin(measure_id)
+            ]
+        graph_time_x1 = str(
+            values.reset_index()['date'].unique()[24:][0]
+            )
+        values = values[graph_time_x1:]['value']
+    else:
+        values = [np.nan,]
+
+    if pd.isnull(values).all():
+        max_val = 10
+    else:
+        if INFOPOLS[poll_iso]['max'] is not None:
+            max_val = INFOPOLS[poll_iso]['max']
+        else:
+            max_val = math.ceil(
+                values.dropna().values.max())
+        if max_val == 0:
+            max_val = 10
+
+    return (max_val)

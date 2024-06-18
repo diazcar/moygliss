@@ -19,6 +19,7 @@ from src.fonctions import (
     build_mpl_graph,
     compute_aggregations,
     get_figure_title,
+    get_iso_max_val,
     get_moymax_data,
     mask_aorp,
     pas_du_range,
@@ -189,21 +190,12 @@ if __name__ == "__main__":
 
             # ---------------------------------------------------------
             # Get overall measurement max to set graph limits
-            values = group_data[
-                group_data['id'].isin(measure_id)
-                ]['value']
 
-            if pd.isnull(values).all():
-                max_val = 10
-            else:
-                if INFOPOLS[poll_iso]['max'] is not None:
-                    max_val = INFOPOLS[poll_iso]['max']
-                else:
-                    max_val = math.ceil(
-                        values.dropna().values.max())
-                if max_val == 0:
-                    max_val = 10
-
+            max_val = get_iso_max_val(
+                poll_iso=poll_iso,
+                measure_id=measure_id,
+                group_data=group_data
+                )
             max_y_lim = max_val + max_val*0.15
             step = pas_du_range(max_val, 0, 10)
             y_ticks = np.arange(

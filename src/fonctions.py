@@ -360,7 +360,7 @@ def build_mpl_graph(
 
     measure_id_data = hourly_data[hourly_data['id'] == measure_id]
     moygliss = measure_id_data['moygliss24'][24:]
-    max_gliss = moygliss.dropna()[-24:].max()
+    max_jour_j = measure_id_data['value'][-24:].max()
     data_hour = measure_id_data['value'][24:]
     time = data_hour.reset_index()['date']
 
@@ -380,6 +380,7 @@ def build_mpl_graph(
     # last_date_to_plot = time.searchsorted(data_hour.last_valid_index())
     ax.plot(moygliss[:last_valid_time], timeseries_color, lw=2)
 
+    max_gliss = moygliss[:last_valid_time].dropna()[-24:].max()
     for lim in ['lim1', 'lim2', 'lim3']:
         if lim in list(INFOPOLS[poll_iso].keys()):
             ax.plot(
@@ -398,14 +399,14 @@ def build_mpl_graph(
             if (
                 INFOPOLS[poll_iso]['lim2'] is not None
                 and
-                max_gliss > INFOPOLS[poll_iso]['lim2']
+                max_jour_j > INFOPOLS[poll_iso]['lim2']
             ):
                 ax.get_lines()[0].set_color('red')
 
             if (
                 INFOPOLS[poll_iso]['lim3'] is not None
                 and
-                max_gliss > INFOPOLS[poll_iso]['lim3']
+                max_jour_j > INFOPOLS[poll_iso]['lim3']
             ):
                 ax.get_lines()[0].set_color('purple')
 
@@ -453,6 +454,7 @@ def build_mpl_graph(
             max_y_lim=max_y_lim,
             poll_iso=poll_iso,
         )
+
     return (fig)
 
 

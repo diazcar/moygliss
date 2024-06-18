@@ -359,9 +359,9 @@ def build_mpl_graph(
     """
 
     measure_id_data = hourly_data[hourly_data['id'] == measure_id]
-    moygliss = measure_id_data['moygliss24']
+    moygliss = measure_id_data['moygliss24'][24:]
     max_gliss = moygliss.dropna()[-24:].max()
-    data_hour = measure_id_data['value']
+    data_hour = measure_id_data['value'][24:]
     time = data_hour.reset_index()['date']
 
     x_fig_size = 3
@@ -416,9 +416,9 @@ def build_mpl_graph(
     ax.set_yticks(y_ticks)
     ax.set_ylim(0, max_y_lim)
     ax.set_xlim(
-            hourly_data.index[0],
+            data_hour.index[0],
             dt.datetime.combine(
-                    hourly_data.index[-1], dt.datetime.max.time()
+                    data_hour.index[-1], dt.datetime.max.time()
                     )
             )
     for tick in ax.xaxis.get_minor_ticks():
@@ -457,15 +457,15 @@ def build_mpl_graph(
 
 
 def add_annotations(
-    group: str,
-    measure_id: str,
-    poll_iso: str,
-    day_data: str,
-    time_vector: pd.DatetimeIndex,
-    max_y_lim: int,
-    ax: plt.axes,
-    mode: str,
-    ):
+        group: str,
+        measure_id: str,
+        poll_iso: str,
+        day_data: str,
+        time_vector: pd.DatetimeIndex,
+        max_y_lim: int,
+        ax: plt.axes,
+        mode: str,
+        ):
     """_summary_
 
     Parameters
@@ -487,10 +487,11 @@ def add_annotations(
         value_day_list = get_family_day_max(group, measure_id)
         x = time_vector[0] + dt.timedelta(hours=1)
     else:
-        value_day_list = day_data[
+        df_values = day_data[
             day_data['id'] == measure_id
-            ][mode].to_list()[1:]
-        x = time_vector[0] + dt.timedelta(hours=24)
+            ][mode]
+        value_day_list = df_values.to_list()[1:]
+        x = time_vector[0] + dt.timedelta(hours=1)
 
     y = max_y_lim - max_y_lim*0.06
 
@@ -543,7 +544,7 @@ def add_weight_annotations(
     _type_
         _description_
     """
-    id_data = weight_data[weight_data['id'] == measure_id]
+    id_data = weight_data[weight_data['id'] == measure_id][time_vector[0]:]
     dtindex = id_data.resample('d')['value'].idxmax()
     drop_col_list = ['id', 'id_site', 'phy_name', 'id_phy', 'value', 'unit']
 
@@ -850,4 +851,4 @@ def get_family_day_max(
         .max()
         )
 
-    return (day_maxes.values)
+    return (day_maxes.values[1:])

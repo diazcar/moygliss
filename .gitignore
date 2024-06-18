@@ -9,4 +9,5 @@ __pycache__
 pypmgliss-xr.yml
 # Files to keep
 !.gitkeep
-
+!./data/physicals.csv
+!./data/cov_pcop.csv

@@ -98,22 +98,22 @@ INFOPOLS = {
         "max": None,  # val_OXYLENE_max', '10
         "ann": "mean",
     },
-    "V6": {
-        "nom": "n-Butane",
-        "lim1": 5,
-        "lim2": None,
-        "lim3": None,
-        "max": None,  # val_NBUTANE_max', '10
-        "ann": "mean",
-    },
-    "V9": {
-        "nom": "Ethylene",
-        "lim1": 5,
-        "lim2": None,
-        "lim3": None,
-        "max": 10,  # val_ETHYLENE_max', '10
-        "ann": "mean",
-    },
+    # "V6": {
+    #     "nom": "n-Butane",
+    #     "lim1": 5,
+    #     "lim2": None,
+    #     "lim3": None,
+    #     "max": None,  # val_NBUTANE_max', '10
+    #     "ann": "mean",
+    # },
+    # "V9": {
+    #     "nom": "Ethylene",
+    #     "lim1": 5,
+    #     "lim2": None,
+    #     "lim3": None,
+    #     "max": 10,  # val_ETHYLENE_max', '10
+    #     "ann": "mean",
+    # },
     "VB": {
         "nom": "Formaldehyde",
         "lim1": 5,
@@ -212,9 +212,19 @@ INFOPOLS = {
         "max": None,
         "ann": "max",
     },
+    "BC": {
+        "nom": "Black Carbon",
+        "lim1": None,
+        "lim2": None,
+        "lim3": None,
+        "max": None,
+        "ann": "max",
+    },
 }
 
-PHYSICALS = pd.read_csv("./physicals.csv").set_index('id').to_dict('index')
+PHYSICALS = pd.read_csv(
+    "./data/physicals.csv"
+    ).set_index('id').to_dict('index')
 
 METAUX_LOURDS = ['9G', '9I', '9P', '9Q', '9R', '9S', '9T', '9U', '9V',
                  '9W', '9X', '9Y', '9a', '9c', '9d', '9e', '9g', '3Z',
@@ -232,16 +242,31 @@ COV_LOURDS = ['V4', 'VQ', 'VA', 'VU', 'VV', 'H9', 'OA',
               'R4', 'VR', 'VS', 'VT', 'VG', 'W6', 'VX',
               'VH', 'Vd', 'VC',]
 
-FAMILY_LIST = ['ML', 'BTEX', 'COVle', 'COVlo']
+BLACK_CARBON = ['GA', 'GB']
+
+FAMILY_LIST = ['ML', 'BTEX', 'COVle', 'COVlo', 'BC']
 
 POLL_AGG_LIST = {
+    'DIDON': {
+        'BC': {
+            'sites': ['GAPCOM', 'ARSON',
+                      'CINQAV', 'MOBILE_12',
+                      'RABATA'
+                      ],
+            'iso_list': BLACK_CARBON,
+        }
+    },
     'V_MART': {
-        'ML': {'sites': ['FSCB'],
-               'iso_list': METAUX_LOURDS},
+        'ML': {
+            'sites': ['FSCB'],
+            'iso_list': METAUX_LOURDS
+        },
     },
     'V_MARS': {
-        'ML': {'sites': ['CINQAV'],
-               'iso_list': METAUX_LOURDS},
+        'ML': {
+            'sites': ['CINQAV'],
+            'iso_list': METAUX_LOURDS
+            },
         },
     'V_COV': {
         'BTEX': {
@@ -345,3 +370,5 @@ DATA_KEYS = {
 }
 
 GROUP_LIST = ["DIDON", "V_NICE", "V_MARS", "V_MART", "V_COV"]
+
+PCOP_DATA = pd.read_csv("./data/cov_pcop.csv", delimiter=';')

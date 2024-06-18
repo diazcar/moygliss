@@ -8,11 +8,13 @@ import numpy as np
 import sys
 sys.path.insert(0, "../")
 
+
 from src.dictionaries import (
     DATA_KEYS,
     FAMILY_LIST,
     INFOPOLS,
     JSON_PATH_LISTS,
+    PCOP_DATA,
     PHYSICALS,
     POLL_AGG_LIST,
     URL_DICT,
@@ -20,11 +22,36 @@ from src.dictionaries import (
 )
 TIME_NOW = dt.datetime.now()
 
+
 def list_of_strings(arg):
+    """_summary_
+
+    Parameters
+    ----------
+    arg : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     return arg.split(',')
 
 
 def time_window(date: str = None):
+    """_summary_
+
+    Parameters
+    ----------
+    date : str, optional
+        _description_, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     days = 5
     time_delta = dt.timedelta(days)
 
@@ -94,7 +121,7 @@ def request_xr(
         f"groups={groups}&"
         f"measures={measures}"
     )
- 
+
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
 
@@ -111,6 +138,22 @@ def request_xr(
 
 
 def build_dataframe(data: dict, header: list, datatype: str) -> pd.DataFrame:
+    """_summary_
+
+    Parameters
+    ----------
+    data : dict
+        _description_
+    header : list
+        _description_
+    datatype : str
+        _description_
+
+    Returns
+    -------
+    pd.DataFrame
+        _description_
+    """
     out_df = pd.DataFrame(columns=header)
     for i in range(len(data[:])):
         df = pd.DataFrame(data[i][datatype]['data'])
@@ -137,7 +180,15 @@ def build_dataframe(data: dict, header: list, datatype: str) -> pd.DataFrame:
 
 
 def test_path(path: str, mode: str):
+    """_summary_
 
+    Parameters
+    ----------
+    path : str
+        _description_
+    mode : str
+        _description_
+    """
     if mode == "mkdir":
         if os.path.exists(path) is False:
             os.mkdir(path)
@@ -150,7 +201,24 @@ def test_path(path: str, mode: str):
 
 
 def get_moymax_data(data, measure_id, poll_site_info, threshold=0.75):
+    """_summary_
 
+    Parameters
+    ----------
+    data : _type_
+        _description_
+    measure_id : _type_
+        _description_
+    poll_site_info : _type_
+        _description_
+    threshold : float, optional
+        _description_, by default 0.75
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     pd.options.mode.chained_assignment = None
 
     data.drop(['id'], axis=1, inplace=True)
@@ -185,6 +253,24 @@ def add_poll_info(
         columns: list,
         new_col: dict = None,
         ) -> pd.DataFrame:
+    """_summary_
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        _description_
+    site_info : pd.DataFrame
+        _description_
+    columns : list
+        _description_
+    new_col : dict, optional
+        _description_, by default None
+
+    Returns
+    -------
+    pd.DataFrame
+        _description_
+    """
     for head in columns:
         data.insert(
             0,
@@ -200,6 +286,18 @@ def add_poll_info(
 
 
 def mask_aorp(data):
+    """_summary_
+
+    Parameters
+    ----------
+    data : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     data['value'] = data.apply(
         lambda row:
             np.nan
@@ -211,6 +309,7 @@ def mask_aorp(data):
 
 
 def build_mpl_graph(
+                group: str,
                 poll_iso: str,
                 measure_id: str,
                 site_name: str,
@@ -224,6 +323,40 @@ def build_mpl_graph(
                 timeseries_color: str = 'blue',
                 weight_data=None,
                 ) -> plt:
+    """_summary_
+
+    Parameters
+    ----------
+    poll_iso : str
+        _description_
+    measure_id : str
+        _description_
+    site_name : str
+        _description_
+    dept_code : str
+        _description_
+    units : str
+        _description_
+    hourly_data : pd.DataFrame
+        _description_
+    day_data : pd.DataFrame
+        _description_
+    y_ticks : list
+        _description_
+    max_y_lim : int
+        _description_
+    background_color : str, optional
+        _description_, by default 'white'
+    timeseries_color : str, optional
+        _description_, by default 'blue'
+    weight_data : _type_, optional
+        _description_, by default None
+
+    Returns
+    -------
+    plt
+        _description_
+    """
 
     measure_id_data = hourly_data[hourly_data['id'] == measure_id]
     moygliss = measure_id_data['moygliss24']
@@ -243,9 +376,9 @@ def build_mpl_graph(
             facecolor=background_color
             )
     ax.plot(data_hour, timeseries_color, alpha=.25)
-
-    last_date_to_plot = time.searchsorted(data_hour.last_valid_index())
-    ax.plot(moygliss.iloc[:last_date_to_plot], timeseries_color, lw=2)
+    last_valid_time = data_hour.last_valid_index()
+    # last_date_to_plot = time.searchsorted(data_hour.last_valid_index())
+    ax.plot(moygliss[:last_valid_time], timeseries_color, lw=2)
 
     for lim in ['lim1', 'lim2', 'lim3']:
         if lim in list(INFOPOLS[poll_iso].keys()):
@@ -301,7 +434,9 @@ def build_mpl_graph(
     ax.grid(True, linestyle='--')
 
     add_annotations(
+            group=group,
             measure_id=measure_id,
+            poll_iso=poll_iso,
             day_data=day_data,
             time_vector=time,
             ax=ax,
@@ -316,25 +451,47 @@ def build_mpl_graph(
             measure_id=measure_id,
             ax=ax,
             max_y_lim=max_y_lim,
-            mode=INFOPOLS[poll_iso]["ann"],
+            poll_iso=poll_iso,
         )
     return (fig)
 
 
 def add_annotations(
-                measure_id: str,
-                day_data: str,
-                time_vector: pd.DatetimeIndex,
-                max_y_lim: int,
-                ax: plt.axes,
-                mode: str,
-                ):
+    group: str,
+    measure_id: str,
+    poll_iso: str,
+    day_data: str,
+    time_vector: pd.DatetimeIndex,
+    max_y_lim: int,
+    ax: plt.axes,
+    mode: str,
+    ):
+    """_summary_
 
-    value_day_list = day_data[
-        day_data['id'] == measure_id
-        ][mode].to_list()[1:-1]
+    Parameters
+    ----------
+    measure_id : str
+        _description_
+    day_data : str
+        _description_
+    time_vector : pd.DatetimeIndex
+        _description_
+    max_y_lim : int
+        _description_
+    ax : plt.axes
+        _description_
+    mode : str
+        _description_
+    """
+    if poll_iso in FAMILY_LIST:
+        value_day_list = get_family_day_max(group, measure_id)
+        x = time_vector[0] + dt.timedelta(hours=1)
+    else:
+        value_day_list = day_data[
+            day_data['id'] == measure_id
+            ][mode].to_list()[1:]
+        x = time_vector[0] + dt.timedelta(hours=24)
 
-    x = time_vector[0] + dt.timedelta(hours=25)
     y = max_y_lim - max_y_lim*0.06
 
     for max in value_day_list:
@@ -362,16 +519,38 @@ def add_weight_annotations(
         measure_id: str,
         ax: plt.axes,
         max_y_lim: int,
-        mode: str,
+        poll_iso: str,
         ):
+    """_summary_
+
+    Parameters
+    ----------
+    weight_data : pd.DataFrame
+        _description_
+    time_vector : pd.DatetimeIndex
+        _description_
+    measure_id : str
+        _description_
+    ax : plt.axes
+        _description_
+    max_y_lim : int
+        _description_
+    mode : str
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     id_data = weight_data[weight_data['id'] == measure_id]
     dtindex = id_data.resample('d')['value'].idxmax()
     drop_col_list = ['id', 'id_site', 'phy_name', 'id_phy', 'value', 'unit']
 
     x_delta = dt.timedelta(hours=24)
-    x = time_vector[0] + dt.timedelta(hours=25)
+    x = time_vector[0] + dt.timedelta(hours=1)
 
-    for date_index in dtindex[:-1]:
+    for date_index in dtindex:
         if pd.isnull(date_index):
             x = x + x_delta
         else:
@@ -381,11 +560,20 @@ def add_weight_annotations(
             highest_five.index.name = "index"
             highest_five.rename(
                 columns={
-                    highest_five.columns[0]: "iso",
+                    highest_five.columns[0]: "iso_name",
                     highest_five.columns[1]: "weight"
                 },
                 inplace=True
             )
+
+            if poll_iso in ['BTEX', 'COVle', 'COVlo']:
+                highest_five['pcop'] = highest_five['iso_name'].apply(
+                    lambda iso_name:
+                        PCOP_DATA[
+                            PCOP_DATA["label"] == iso_name
+                            ]['PCOP'].values,
+                    )
+
             highest_five = highest_five.sort_values(
                 by=['weight'],
                 ascending=False
@@ -393,10 +581,20 @@ def add_weight_annotations(
 
             y_delta = max_y_lim*.09
             y = max_y_lim - y_delta
-
-            for i in range(5):
-                iso = highest_five.iloc[i]['iso']
+            if len(highest_five.index) > 2:
+                n = 5
+            else:
+                n = 2
+            for i in range(n):
+                iso = highest_five.iloc[i]['iso_name']
                 weight = highest_five.iloc[i]['weight']
+
+                if poll_iso in ['BTEX', 'COVle', 'COVlo']:
+                    pcop_index = highest_five.iloc[i]['pcop'][0]
+                    color = get_pcop_index_color(pcop_index)
+
+                else:
+                    color = "silver"
 
                 y = y - y_delta
 
@@ -405,19 +603,57 @@ def add_weight_annotations(
                     xy=(x, y),
                     xycoords='data',
                     fontsize=8,
-                    color='#aaaaaa',
+                    color=color,
                     weight='bold',
                 )
 
             x = x + x_delta
-
     return ()
+
+
+def get_pcop_index_color(value):
+    """_summary_
+
+    Parameters
+    ----------
+    value : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    if value <= 25:
+        color = "green"
+    if 25 <= value <= 75:
+        color = "orange"
+    if 75 <= value <= 125:
+        color = "red"
+    if 125 <= value <= 175:
+        color = "purple"
+
+    return (color)
 
 
 def compute_aggregations(
         data: pd.DataFrame,
         reseaux: str,
 ):
+    """_summary_
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        _description_
+    reseaux : str
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     iso_family = list(POLL_AGG_LIST[reseaux].keys())
     weight_data = pd.DataFrame()
 
@@ -475,6 +711,26 @@ def wrap_agg_to_data(
         site_name: str,
         physical_id: str,
         ):
+    """_summary_
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        _description_
+    agg_data : pd.DataFrame
+        _description_
+    unit : str
+        _description_
+    site_name : str
+        _description_
+    physical_id : str
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     n_data = len(agg_data.values)
     for site in site_name:
         agg_df = pd.DataFrame(
@@ -494,7 +750,22 @@ def wrap_agg_to_data(
 
 
 def pas_du_range(val_end, offset, nbr_ysticks):
-    """ define step for range. """
+    """_summary_
+
+    Parameters
+    ----------
+    val_end : _type_
+        _description_
+    offset : _type_
+        _description_
+    nbr_ysticks : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     step_by_tick = (val_end+offset)/nbr_ysticks
     nb_digits = len(str(int(np.round(step_by_tick))))-1
     if nb_digits == 0:
@@ -521,6 +792,11 @@ def get_figure_title(
         _description_
     id : str
         _description_
+
+    Returns
+    -------
+    _type_
+        _description_
     """
     if "MOBILE" in id:
         name = group_data[
@@ -542,3 +818,36 @@ def get_figure_title(
             ]['dept_code'].values[0]
 
     return (site_name, dept_code)
+
+
+def get_family_day_max(
+        group: str,
+        measure_id: str,
+) -> pd.DataFrame:
+    """_summary_
+
+    Parameters
+    ----------
+    measure_id : str
+        _description_
+    poll_iso : str
+        _description_
+
+    Returns
+    -------
+    pd.DataFrame
+        _description_
+    """
+    agg_data = pd.read_csv(
+        f"./data/{group}_agg_weights.csv",
+        parse_dates=['date'],
+        )
+    data_measure_id = agg_data[agg_data['id'] == measure_id]
+
+    day_maxes = (
+        data_measure_id['value']
+        .groupby(data_measure_id.date.dt.day)
+        .max()
+        )
+
+    return (day_maxes.values)

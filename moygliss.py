@@ -2,10 +2,11 @@ import sys
 import matplotlib
 import numpy as np
 import pandas as pd
+from pandas.plotting import register_matplotlib_converters
 import math
 import argparse
-import sys
 sys.path.insert(0, "./")
+
 from src.dictionaries import (
     INFOPOLS,
     MATPLOT_PARAMS,
@@ -27,6 +28,7 @@ from src.fonctions import (
     list_of_strings
     )
 
+register_matplotlib_converters()
 pd.options.mode.chained_assignment = None
 matplotlib.rcParams.update(MATPLOT_PARAMS)
 
@@ -162,7 +164,7 @@ if __name__ == "__main__":
         # Compute rolling mean and create "moygliss24" col. in data
         group_data['moygliss24'] = (
             group_data['value']
-            .rolling(window=24, min_periods=1)
+            .rolling(window=24, min_periods=12)
             .mean()
             )
 
@@ -233,12 +235,13 @@ if __name__ == "__main__":
                         # ---------------------------------------------------------
                         # Build graph for measurement
                         plot = build_mpl_graph(
+                                group=group,
                                 poll_iso=poll_iso,
                                 measure_id=id,
                                 site_name=site_name,
                                 dept_code=dept_code,
                                 units=units,
-                                hourly_data=group_data.iloc[24:],
+                                hourly_data=group_data,
                                 day_data=group_moymax_data,
                                 weight_data=weight_data,
                                 max_y_lim=max_y_lim,

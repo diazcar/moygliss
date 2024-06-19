@@ -75,6 +75,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # Global vars
+    PHYSICALS = pd.read_csv(
+            f"{args.output}/data/physicals.csv"
+        ).set_index('id').to_dict('index')
     # -------------------------------------------------------------------------
     # Create path/folder if not exist
     test_path(f'{args.output}/data', 'mkdir')
@@ -133,7 +137,11 @@ if __name__ == "__main__":
         # Add iso familly aggregations and build table wiht iso's weights
         weight_data = None
         if group in list(POLL_AGG_LIST.keys()):
-            group_data, weight_data = compute_aggregations(group_data, group)
+            group_data, weight_data = compute_aggregations(
+                group_data,
+                group,
+                PHYSICALS
+                )
 
             # Add family info to iso's info list
             cols = ['id', 'id_site', 'phy_name', 'id_phy', 'unit']
@@ -197,7 +205,10 @@ if __name__ == "__main__":
                 group_data=group_data
                 )
             max_y_lim = max_val + max_val*0.15
-            step = pas_du_range(max_val, 0, 10)
+            step = pas_du_range(
+                val_end=max_val,
+                nbr_ysticks=10,
+                offset=0)
             y_ticks = np.arange(
                 0, max_val, step
                 )
@@ -238,6 +249,7 @@ if __name__ == "__main__":
                                 weight_data=weight_data,
                                 max_y_lim=max_y_lim,
                                 y_ticks=y_ticks,
+                                agg_data_dir=args.output,
                         )
 
                         # ---------------------------------------------------------

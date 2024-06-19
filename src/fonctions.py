@@ -1,3 +1,4 @@
+import json
 import math
 import os
 import warnings
@@ -16,7 +17,6 @@ from src.dictionaries import (
     INFOPOLS,
     JSON_PATH_LISTS,
     PCOP_DATA,
-    PHYSICALS,
     POLL_AGG_LIST,
     URL_DICT,
     HEADER_RENAME_LISTS,
@@ -320,6 +320,7 @@ def build_mpl_graph(
                 day_data: pd.DataFrame,
                 y_ticks: list,
                 max_y_lim: int,
+                agg_data_dir: str,
                 background_color: str = 'white',
                 timeseries_color: str = 'blue',
                 weight_data=None,
@@ -378,48 +379,19 @@ def build_mpl_graph(
             )
     ax.plot(data_hour, timeseries_color, alpha=.35)
     last_valid_time = data_hour.last_valid_index()
-    # last_date_to_plot = time.searchsorted(data_hour.last_valid_index())
     ax.plot(moygliss[:last_valid_time], timeseries_color, lw=2)
 
     window_gliss_data = moygliss[:last_valid_time]
     max_gliss = window_gliss_data[-24:].dropna().max()
-    for lim in ['lim1', 'lim2', 'lim3']:
-        if lim in list(INFOPOLS[poll_iso].keys()):
-            ax.plot(
-                    time,
-                    [INFOPOLS[poll_iso][lim],] * (len(moygliss)),
-                    'red',
-                    ls='--'
-            )
-            if (
-                INFOPOLS[poll_iso]['lim1'] is not None
-                and
-                max_gliss > INFOPOLS[poll_iso]['lim1']
-            ):
-                ax.update({'facecolor': (1, 0, 0, 0.05)})
-                ax.get_lines()[1].set_color('red')
 
-            if (
-                INFOPOLS[poll_iso]['lim1'] is not None
-                and
-                max_jour_j > INFOPOLS[poll_iso]['lim1']
-            ):
-                ax.get_lines()[0].set_color('red')
-
-            if (
-                INFOPOLS[poll_iso]['lim2'] is not None
-                and
-                max_jour_j > INFOPOLS[poll_iso]['lim2']
-            ):
-                ax.get_lines()[0].set_color('red')
-                ax.update({'facecolor': (1, 0, 0, 0.05)})
-
-            if (
-                INFOPOLS[poll_iso]['lim3'] is not None
-                and
-                max_jour_j > INFOPOLS[poll_iso]['lim3']
-            ):
-                ax.get_lines()[0].set_color('purple')
+    add_color_use_cases(
+        max_gliss=max_gliss,
+        max_jour_j=max_jour_j,
+        poll_iso=poll_iso,
+        ax=ax,
+        y_ax=time,
+        x_ax_len=len(moygliss),
+    )
 
     ax.xaxis.set_major_locator(dates.HourLocator(byhour=0))
     ax.xaxis.set_minor_locator(dates.HourLocator(byhour=12))
@@ -454,6 +426,7 @@ def build_mpl_graph(
             ax=ax,
             max_y_lim=max_y_lim,
             mode=INFOPOLS[poll_iso]["ann"],
+            agg_data_dir=agg_data_dir
             )
 
     if poll_iso in FAMILY_LIST:
@@ -478,6 +451,7 @@ def add_annotations(
         max_y_lim: int,
         ax: plt.axes,
         mode: str,
+        agg_data_dir: str,
         ):
     """_summary_
 
@@ -497,7 +471,7 @@ def add_annotations(
         _description_
     """
     if poll_iso in FAMILY_LIST:
-        value_day_list = get_family_day_max(group, measure_id)
+        value_day_list = get_family_day_max(group, measure_id, agg_data_dir)
         x = time_vector[0] + dt.timedelta(hours=1)
     else:
         df_values = day_data[
@@ -507,6 +481,12 @@ def add_annotations(
         x = time_vector[0] + dt.timedelta(hours=1)
 
     y = max_y_lim - max_y_lim*0.06
+
+    add_ann_mode(
+        poll_iso=poll_iso,
+        mode=mode,
+        ax=ax
+    )
 
     for max in value_day_list:
 
@@ -525,6 +505,34 @@ def add_annotations(
             x = x + dt.timedelta(hours=24)
         else:
             x = x + dt.timedelta(hours=24)
+
+
+def add_ann_mode(
+        poll_iso: str,
+        mode: str,
+        ax: plt.axes,
+):
+    """_summary_
+
+    Parameters
+    ----------
+    poll_iso : str
+        _description_
+    mode : str
+        _description_
+    """
+    x = -0.1
+    y = 185
+
+    if poll_iso in FAMILY_LIST:
+        x = 120
+    ax.annotate(
+        f"{mode} - >",
+        xy=(x, y),
+        xycoords='figure points',
+        fontsize=8,
+        color='grey',
+        )
 
 
 def add_weight_annotations(
@@ -653,6 +661,7 @@ def get_pcop_index_color(value):
 def compute_aggregations(
         data: pd.DataFrame,
         reseaux: str,
+        physicals: dict,
 ):
     """_summary_
 
@@ -698,7 +707,7 @@ def compute_aggregations(
                 head_data = filtered_data[filtered_data['id_phy'] == head]
                 head_data = head_data.groupby(head_data.index).sum()
                 w8 = head_data['value']/weights['value']
-                weights[PHYSICALS[head]['label']] = w8.values
+                weights[physicals[head]['label']] = w8.values
 
             add_poll_info(
                 data=weights,
@@ -763,7 +772,7 @@ def wrap_agg_to_data(
     return (data)
 
 
-def pas_du_range(val_end, offset, nbr_ysticks):
+def pas_du_range(val_end, nbr_ysticks, offset=0):
     """_summary_
 
     Parameters
@@ -780,14 +789,20 @@ def pas_du_range(val_end, offset, nbr_ysticks):
     _type_
         _description_
     """
-    step_by_tick = (val_end+offset)/nbr_ysticks
-    nb_digits = len(str(int(np.round(step_by_tick))))-1
-    if nb_digits == 0:
-        nb_digits = 1
-    roundup = np.round(step_by_tick, -nb_digits)
-    pas = int(roundup)
-    if pas == 0:
-        pas = step_by_tick
+    if val_end < 5:
+        pas = val_end/nbr_ysticks
+    else:
+        step_by_tick = math.ceil((val_end+offset)/nbr_ysticks)
+        nb_digits = len(str(int(np.round(step_by_tick))))-1
+        if nb_digits == 0:
+            nb_digits = 1
+
+        roundup = np.round(step_by_tick, -nb_digits)
+
+        pas = int(roundup)
+        if pas == 0:
+            pas = step_by_tick
+
     return (pas)
 
 
@@ -837,6 +852,7 @@ def get_figure_title(
 def get_family_day_max(
         group: str,
         measure_id: str,
+        agg_data_dir: str,
 ) -> pd.DataFrame:
     """_summary_
 
@@ -853,7 +869,7 @@ def get_family_day_max(
         _description_
     """
     agg_data = pd.read_csv(
-        f"./data/{group}_agg_weights.csv",
+        f"{agg_data_dir}/data/{group}_agg_weights.csv",
         parse_dates=['date'],
         )
     data_measure_id = agg_data[agg_data['id'] == measure_id]
@@ -910,3 +926,90 @@ def get_iso_max_val(
             max_val = 10
 
     return (max_val)
+
+
+def add_color_use_cases(
+        max_gliss: float,
+        max_jour_j: float,
+        poll_iso: str,
+        ax: plt.axes,
+        y_ax,
+        x_ax_len: int,
+):
+    if poll_iso in ["08", "03"]:
+        for lim in ['lim1', 'lim2', 'lim3']:
+            if lim in list(INFOPOLS[poll_iso].keys()):
+                ax.plot(
+                        y_ax,
+                        [INFOPOLS[poll_iso][lim],] * (x_ax_len),
+                        'red',
+                        ls='--'
+                )
+
+                if (
+                    INFOPOLS[poll_iso]['lim1'] is not None
+                    and
+                    max_jour_j > INFOPOLS[poll_iso]['lim1']
+                ):
+                    ax.update({'facecolor': (1, 0, 0, 0.05)})
+
+                if (
+                    INFOPOLS[poll_iso]['lim1'] is not None
+                    and
+                   (INFOPOLS[poll_iso]['lim1']*0.95) < max_jour_j < INFOPOLS[poll_iso]['lim1']
+                ):
+                    ax.update({'facecolor': (1, .6, 0, 0.05)})
+
+                if (
+                    INFOPOLS[poll_iso]['lim2'] is not None
+                    and
+                    max_jour_j > INFOPOLS[poll_iso]['lim2']
+                ):
+                    ax.get_lines()[0].set_color('red')
+                    ax.update({'facecolor': (1, 0, 0, 0.05)})
+
+                if (
+                    INFOPOLS[poll_iso]['lim3'] is not None
+                    and
+                    max_jour_j > INFOPOLS[poll_iso]['lim3']
+                ):
+                    ax.get_lines()[0].set_color('purple')
+
+    else:
+        for lim in ['lim1', 'lim2', 'lim3']:
+            if lim in list(INFOPOLS[poll_iso].keys()):
+                ax.plot(
+                        y_ax,
+                        [INFOPOLS[poll_iso][lim],] * (x_ax_len),
+                        'red',
+                        ls='--'
+                )
+                if (
+                    INFOPOLS[poll_iso]['lim1'] is not None
+                    and
+                    max_gliss > INFOPOLS[poll_iso]['lim1']
+                ):
+                    ax.update({'facecolor': (1, 0, 0, 0.05)})
+                    ax.get_lines()[1].set_color('red')
+
+                if (
+                    INFOPOLS[poll_iso]['lim1'] is not None
+                    and
+                    max_jour_j > INFOPOLS[poll_iso]['lim1']
+                ):
+                    ax.get_lines()[0].set_color('red')
+
+                if (
+                    INFOPOLS[poll_iso]['lim2'] is not None
+                    and
+                    max_jour_j > INFOPOLS[poll_iso]['lim2']
+                ):
+                    ax.get_lines()[0].set_color('red')
+                    ax.update({'facecolor': (1, 0, 0, 0.05)})
+
+                if (
+                    INFOPOLS[poll_iso]['lim3'] is not None
+                    and
+                    max_jour_j > INFOPOLS[poll_iso]['lim3']
+                ):
+                    ax.get_lines()[0].set_color('purple')

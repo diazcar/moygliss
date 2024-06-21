@@ -10,5 +10,5 @@ pypmgliss-xr.yml
 
 # Files to keep
 !.gitkeep
-!/data/physicals.csv
-!/data/cov_pcop.csv
+!data/physicals.csv
+!data/cov_pcop.csv

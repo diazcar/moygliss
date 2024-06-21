@@ -1,5 +1,13 @@
+# Files to keep
+!.gitkeep
+
+
 # Files to ignore
-data
+
+data/*
+!data/physicals.csv
+!data/cov_pcop.csv
+
 notebook
 local
 output
@@ -8,7 +16,3 @@ __pycache__
 .vscode/*
 pypmgliss-xr.yml
 
-# Files to keep
-!.gitkeep
-!data/physicals.csv
-!data/cov_pcop.csv

@@ -1036,7 +1036,9 @@ def add_color_use_cases(
                 if (
                     INFOPOLS[poll_iso]['lim1'] is not None
                     and
-                   (INFOPOLS[poll_iso]['lim1']*0.95) <= max_jour_j < INFOPOLS[poll_iso]['lim1']
+                   (
+                       INFOPOLS[poll_iso]['lim1']*0.95
+                       ) <= max_jour_j < INFOPOLS[poll_iso]['lim1']
                 ):
                     ax.update({'facecolor': (1, .6, 0, 0.05)})
 

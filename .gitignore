@@ -1,5 +1,5 @@
 # Files to ignore
-data
+./data
 notebook
 local
 output

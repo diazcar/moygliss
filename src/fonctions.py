@@ -1,4 +1,3 @@
-import json
 import math
 import os
 import warnings
@@ -366,17 +365,18 @@ def build_mpl_graph(
     data_hour = measure_id_data['value'][24:]
     time = data_hour.reset_index()['date']
 
-    x_fig_size = 3
+    x_fig_size = 4
     y_fig_size = 3
     if poll_iso in FAMILY_LIST:
-        x_fig_size = 12
+        x_fig_size = 13
 
     fig = plt.figure(figsize=(x_fig_size, y_fig_size))
 
     ax = fig.add_axes(
-            [0.18, 0.1, 0.8, 0.8],
+            [0.12, 0.12, 0.8, 0.8],
             facecolor=background_color
             )
+
     ax.plot(data_hour, timeseries_color, alpha=.35)
     last_valid_time = data_hour.last_valid_index()
     ax.plot(moygliss[:last_valid_time], timeseries_color, lw=2)
@@ -439,6 +439,34 @@ def build_mpl_graph(
             poll_iso=poll_iso,
         )
 
+        if poll_iso in ['COVle', 'COVlo', 'BTEX']:
+
+            ax2 = ax.twinx()
+
+            reactive_data = weight_data[
+                weight_data['id'] == measure_id
+                ]['reactive_value']
+
+            ax2.plot(
+                time,
+                reactive_data[time[0]:],
+                color='darkorange',
+                )
+            ax2.set_ylim(0, max_y_lim)
+            ax2.set_xlim(
+                data_hour.index[0],
+                dt.datetime.combine(
+                        data_hour.index[-1], dt.datetime.max.time()
+                        )
+            )
+            ax2.set_yticks(y_ticks)
+
+            ax2.set_ylabel("Conc. Potentiellement Réactive")
+            ax2.yaxis.label.set_color('darkorange')
+
+            ax.yaxis.label.set_color('blue')
+            ax.get_lines()[1].remove()
+
     return (fig)
 
 
@@ -472,13 +500,13 @@ def add_annotations(
     """
     if poll_iso in FAMILY_LIST:
         value_day_list = get_family_day_max(group, measure_id, agg_data_dir)
-        x = time_vector[0] + dt.timedelta(hours=1)
+        x = time_vector[0]
     else:
         df_values = day_data[
             day_data['id'] == measure_id
             ][mode]
         value_day_list = df_values.to_list()[1:]
-        x = time_vector[0] + dt.timedelta(hours=1)
+        x = time_vector[0]
 
     y = max_y_lim - max_y_lim*0.06
 
@@ -521,16 +549,16 @@ def add_ann_mode(
     mode : str
         _description_
     """
-    x = -0.1
-    y = 185
+    x = -1.3
+    y = 189
 
     if poll_iso in FAMILY_LIST:
-        x = 120
+        x = 85
     ax.annotate(
-        f"{mode} - >",
+        f"{mode}->",
         xy=(x, y),
         xycoords='figure points',
-        fontsize=8,
+        fontsize=7,
         color='grey',
         )
 
@@ -567,10 +595,21 @@ def add_weight_annotations(
     """
     id_data = weight_data[weight_data['id'] == measure_id][time_vector[0]:]
     dtindex = id_data.resample('d')['value'].idxmax()
-    drop_col_list = ['id', 'id_site', 'phy_name', 'id_phy', 'value', 'unit']
+    if poll_iso in ['BTEX', 'COVle', 'COVlo']:
+        drop_col_list = [
+            'id', 'id_site', 'phy_name',
+            'id_phy', 'value', 'reactive_value',
+            'unit',
+            ]
+    else:
+        drop_col_list = [
+            'id', 'id_site', 'phy_name',
+            'id_phy', 'value', 'unit'
+            ]
 
     x_delta = dt.timedelta(hours=24)
-    x = time_vector[0] + dt.timedelta(hours=1)
+    x = time_vector[0]
+    x_delta_porcentage = dt.timedelta(hours=5)
 
     for date_index in dtindex:
         if pd.isnull(date_index):
@@ -621,14 +660,22 @@ def add_weight_annotations(
                 y = y - y_delta
 
                 ax.annotate(
-                    f"{iso} : {weight*100: .0f}%",
+                    f"{weight*100: .0f}%-",
                     xy=(x, y),
+                    xycoords='data',
+                    fontsize=8,
+                    color="silver",
+                    weight='bold',
+                )
+
+                ax.annotate(
+                    f"{iso}",
+                    xy=(x+x_delta_porcentage, y),
                     xycoords='data',
                     fontsize=8,
                     color=color,
                     weight='bold',
                 )
-
             x = x + x_delta
     return ()
 
@@ -691,10 +738,15 @@ def compute_aggregations(
                 &
                 (data['id_phy'].isin(iso_list_family))
                 ]
+            if family in ['BTEX', 'COVlo', 'COVle']:
+                add_pcop_weight(
+                    data=filtered_data
+                    )
 
             if family == 'ML':
                 filtered_data['value'] = filtered_data['value']/1000
                 filtered_data['unit'] = 'μg/m3'
+
             weights = (
                 filtered_data['value']
                 .groupby(filtered_data.index)
@@ -702,6 +754,13 @@ def compute_aggregations(
                 .replace(0, np.nan)
                 .to_frame()
             )
+            if family in ['BTEX', 'COVlo', 'COVle']:
+                weights["reactive_value"] = (
+                    filtered_data['value_w8_pcop']
+                    .groupby(filtered_data.index)
+                    .sum()
+                    .replace(0, np.nan)
+                )
 
             for head in list(filtered_data['id_phy'].unique()):
                 head_data = filtered_data[filtered_data['id_phy'] == head]
@@ -725,6 +784,27 @@ def compute_aggregations(
     data = data[~data.id_phy.isin(iso_list_family)]
 
     return (data, weight_data)
+
+
+def add_pcop_weight(
+        data: pd.DataFrame,
+):
+    """_summary_
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        _description_
+    """
+    data['value_w8_pcop'] = data.apply(
+        lambda row: (
+            row['value']*(
+                PCOP_DATA[PCOP_DATA['id'] == row['id_phy']]['PCOP'].values
+                )/100
+            )[0],
+        axis=1,
+        )
+    return (data)
 
 
 def wrap_agg_to_data(
@@ -956,24 +1036,17 @@ def add_color_use_cases(
                 if (
                     INFOPOLS[poll_iso]['lim1'] is not None
                     and
-                   (INFOPOLS[poll_iso]['lim1']*0.95) < max_jour_j < INFOPOLS[poll_iso]['lim1']
+                   (INFOPOLS[poll_iso]['lim1']*0.95) <= max_jour_j < INFOPOLS[poll_iso]['lim1']
                 ):
                     ax.update({'facecolor': (1, .6, 0, 0.05)})
 
                 if (
                     INFOPOLS[poll_iso]['lim2'] is not None
                     and
-                    max_jour_j > INFOPOLS[poll_iso]['lim2']
+                    max_jour_j >= INFOPOLS[poll_iso]['lim2']
                 ):
                     ax.get_lines()[0].set_color('red')
                     ax.update({'facecolor': (1, 0, 0, 0.05)})
-
-                if (
-                    INFOPOLS[poll_iso]['lim3'] is not None
-                    and
-                    max_jour_j > INFOPOLS[poll_iso]['lim3']
-                ):
-                    ax.get_lines()[0].set_color('purple')
 
     else:
         for lim in ['lim1', 'lim2', 'lim3']:
@@ -987,7 +1060,7 @@ def add_color_use_cases(
                 if (
                     INFOPOLS[poll_iso]['lim1'] is not None
                     and
-                    max_gliss > INFOPOLS[poll_iso]['lim1']
+                    max_gliss >= INFOPOLS[poll_iso]['lim1']
                 ):
                     ax.update({'facecolor': (1, 0, 0, 0.05)})
                     ax.get_lines()[1].set_color('red')
@@ -995,14 +1068,14 @@ def add_color_use_cases(
                 if (
                     INFOPOLS[poll_iso]['lim1'] is not None
                     and
-                    max_jour_j > INFOPOLS[poll_iso]['lim1']
+                    max_jour_j >= INFOPOLS[poll_iso]['lim1']
                 ):
                     ax.get_lines()[0].set_color('red')
 
                 if (
                     INFOPOLS[poll_iso]['lim2'] is not None
                     and
-                    max_jour_j > INFOPOLS[poll_iso]['lim2']
+                    max_jour_j >= INFOPOLS[poll_iso]['lim2']
                 ):
                     ax.get_lines()[0].set_color('red')
                     ax.update({'facecolor': (1, 0, 0, 0.05)})
@@ -1010,6 +1083,6 @@ def add_color_use_cases(
                 if (
                     INFOPOLS[poll_iso]['lim3'] is not None
                     and
-                    max_jour_j > INFOPOLS[poll_iso]['lim3']
+                    max_jour_j >= INFOPOLS[poll_iso]['lim3']
                 ):
-                    ax.get_lines()[0].set_color('purple')
+                    ax.get_lines()[0].set_color('green')

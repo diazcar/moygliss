@@ -107,7 +107,7 @@ def request_xr(
             url, verify=False
             ).json()[DATA_KEYS[folder]]
 
-        data = pd.io.json.json_normalize(
+        data = pd.json_normalize(
             data=request_data,
             record_path=JSON_PATH_LISTS[folder]['record_path'],
             meta=JSON_PATH_LISTS[folder]['meta'],
@@ -170,7 +170,7 @@ def get_moymax_data(data, measure_id, poll_site_info, threshold=0.75):
     moymax_jour['max'] = data['value'].resample('d').max()
     moymax_jour.loc[
         moymax_jour['data_coverage'] < threshold, ['mean', 'max']
-        ] = np.NaN
+        ] = np.nan
 
     site_info = poll_site_info[
         poll_site_info['id'] == measure_id

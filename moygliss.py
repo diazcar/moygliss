@@ -3,7 +3,6 @@ import matplotlib
 import numpy as np
 import pandas as pd
 from pandas.plotting import register_matplotlib_converters
-import math
 import argparse
 sys.path.insert(0, "./")
 

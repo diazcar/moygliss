@@ -220,27 +220,46 @@ INFOPOLS = {
         "max": None,
         "ann": "max",
     },
+    "COVpcop": {
+        "nom": "All COV",
+        "lim1": None,
+        "lim2": None,
+        "lim3": None,
+        "max": None,
+        "ann": "max",
+    },
 }
 
 METAUX_LOURDS = ['9G', '9I', '9P', '9Q', '9R', '9S', '9T', '9U', '9V',
                  '9W', '9X', '9Y', '9a', '9c', '9d', '9e', '9g', '3Z',
                  '9h', '9i', '9p', '9q', '9s', '9u', '9v',]
 
-BTEX = ['V4', 'VQ', 'VA', 'VU',  'VV',]
+BTEX = ['V4', 'VQ', 'VA', 'VU',  'VV',]  # 5
 
 COV_LEGERES = ['V6', 'VD', 'V0', '0N', 'V9', 'V8', 'VP',
                'VN', 'V3', 'V2', 'V1', 'V7', 'Ut', 'WH',
                'VI', 'VK', 'VF', 'W7', 'VL', 'O3', 'O7',
-               'OC', 'WD', 'V5', 'WI',]
+               'OC', 'WD', 'V5', 'WI',]  # 25
 
 COV_LOURDS = ['V4', 'VQ', 'VA', 'VU', 'VV', 'H9', 'OA',
               'H3', 'H4', 'R2', 'QA', 'WB', 'WD', 'VE',
               'R4', 'VR', 'VS', 'VT', 'VG', 'W6', 'VX',
-              'VH', 'Vd', 'VC',]
+              'VH', 'Vd', 'VC',]  # 24
+
+ALL_COV = [
+    'V6', 'VD', 'V0', '0N', 'V9', 'V8', 'VP', 'VN', 'V3',
+    'V2', 'V1', 'V7', 'Ut', 'WH', 'VI', 'VK', 'VF', 'W7',
+    'VL', 'O3', 'O7', 'OC', 'WD', 'V5', 'WI', 'V4', 'VQ',
+    'VA', 'VU', 'VV', 'H9', 'OA', 'H3', 'H4', 'R2', 'QA',
+    'WB', 'WD', 'VE', 'R4', 'VR', 'VS', 'VT', 'VG', 'W6', 
+    'VX', 'VH', 'Vd', 'VC',
+    ]  # 49
 
 BLACK_CARBON = ['GA', 'GB']
 
-FAMILY_LIST = ['ML', 'BTEX', 'COVle', 'COVlo', 'BC']
+FAMILY_LIST = ['ML', 'BC']
+
+COV_FAMILIES = ['BTEX', 'COVle', 'COVlo', 'COVpcop']
 
 POLL_AGG_LIST = {
     'DIDON': {
@@ -278,7 +297,11 @@ POLL_AGG_LIST = {
         'COVlo': {
             'sites': ['BETG', 'MLVR', 'PDBL'],
             'iso_list': COV_LOURDS
-        }
+        },
+        'COVpcop': {
+            'sites': ['BETG', 'MLVR', 'PDBL'],
+            'iso_list': ALL_COV
+        },
     },
 }
 

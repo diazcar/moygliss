@@ -11,6 +11,7 @@ sys.path.insert(0, "../")
 
 
 from src.dictionaries import (
+    COV_FAMILIES,
     DATA_KEYS,
     FAMILY_LIST,
     INFOPOLS,
@@ -24,34 +25,11 @@ TIME_NOW = dt.datetime.now()
 
 
 def list_of_strings(arg):
-    """_summary_
-
-    Parameters
-    ----------
-    arg : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
     return arg.split(',')
 
 
 def time_window(date: str = None):
-    """_summary_
 
-    Parameters
-    ----------
-    date : str, optional
-        _description_, by default None
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
     days = 5
     time_delta = dt.timedelta(days)
 
@@ -138,22 +116,7 @@ def request_xr(
 
 
 def build_dataframe(data: dict, header: list, datatype: str) -> pd.DataFrame:
-    """_summary_
 
-    Parameters
-    ----------
-    data : dict
-        _description_
-    header : list
-        _description_
-    datatype : str
-        _description_
-
-    Returns
-    -------
-    pd.DataFrame
-        _description_
-    """
     out_df = pd.DataFrame(columns=header)
     for i in range(len(data[:])):
         df = pd.DataFrame(data[i][datatype]['data'])
@@ -180,15 +143,7 @@ def build_dataframe(data: dict, header: list, datatype: str) -> pd.DataFrame:
 
 
 def test_path(path: str, mode: str):
-    """_summary_
 
-    Parameters
-    ----------
-    path : str
-        _description_
-    mode : str
-        _description_
-    """
     if mode == "mkdir":
         if os.path.exists(path) is False:
             os.mkdir(path)
@@ -201,24 +156,7 @@ def test_path(path: str, mode: str):
 
 
 def get_moymax_data(data, measure_id, poll_site_info, threshold=0.75):
-    """_summary_
 
-    Parameters
-    ----------
-    data : _type_
-        _description_
-    measure_id : _type_
-        _description_
-    poll_site_info : _type_
-        _description_
-    threshold : float, optional
-        _description_, by default 0.75
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
     pd.options.mode.chained_assignment = None
 
     data.drop(['id'], axis=1, inplace=True)
@@ -253,24 +191,7 @@ def add_poll_info(
         columns: list,
         new_col: dict = None,
         ) -> pd.DataFrame:
-    """_summary_
 
-    Parameters
-    ----------
-    data : pd.DataFrame
-        _description_
-    site_info : pd.DataFrame
-        _description_
-    columns : list
-        _description_
-    new_col : dict, optional
-        _description_, by default None
-
-    Returns
-    -------
-    pd.DataFrame
-        _description_
-    """
     for head in columns:
         data.insert(
             0,
@@ -286,18 +207,7 @@ def add_poll_info(
 
 
 def mask_aorp(data):
-    """_summary_
 
-    Parameters
-    ----------
-    data : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
     data['value'] = data.apply(
         lambda row:
             np.nan
@@ -324,40 +234,6 @@ def build_mpl_graph(
                 timeseries_color: str = 'blue',
                 weight_data=None,
                 ) -> plt:
-    """_summary_
-
-    Parameters
-    ----------
-    poll_iso : str
-        _description_
-    measure_id : str
-        _description_
-    site_name : str
-        _description_
-    dept_code : str
-        _description_
-    units : str
-        _description_
-    hourly_data : pd.DataFrame
-        _description_
-    day_data : pd.DataFrame
-        _description_
-    y_ticks : list
-        _description_
-    max_y_lim : int
-        _description_
-    background_color : str, optional
-        _description_, by default 'white'
-    timeseries_color : str, optional
-        _description_, by default 'blue'
-    weight_data : _type_, optional
-        _description_, by default None
-
-    Returns
-    -------
-    plt
-        _description_
-    """
 
     measure_id_data = hourly_data[hourly_data['id'] == measure_id]
     moygliss = measure_id_data['moygliss24'][24:]
@@ -367,7 +243,7 @@ def build_mpl_graph(
 
     x_fig_size = 4
     y_fig_size = 3
-    if poll_iso in FAMILY_LIST:
+    if poll_iso in FAMILY_LIST or poll_iso in COV_FAMILIES:
         x_fig_size = 13
 
     fig = plt.figure(figsize=(x_fig_size, y_fig_size))
@@ -428,6 +304,20 @@ def build_mpl_graph(
             mode=INFOPOLS[poll_iso]["ann"],
             agg_data_dir=agg_data_dir
             )
+    if poll_iso in COV_FAMILIES:
+        update_COV_plot(
+            poll_iso=poll_iso,
+            weight_data=weight_data,
+            measure_id=measure_id,
+            start_end_dates=[
+                data_hour.index[0],
+                data_hour.index[-1]
+                ],
+            time=time,
+            ax=ax,
+            max_y_lim=max_y_lim,
+            y_ticks=y_ticks,
+        )
 
     if poll_iso in FAMILY_LIST:
         add_weight_annotations(
@@ -439,35 +329,81 @@ def build_mpl_graph(
             poll_iso=poll_iso,
         )
 
-        if poll_iso in ['COVle', 'COVlo', 'BTEX']:
-
-            ax2 = ax.twinx()
-
-            reactive_data = weight_data[
-                weight_data['id'] == measure_id
-                ]['reactive_value']
-
-            ax2.plot(
-                time,
-                reactive_data[time[0]:],
-                color='darkorange',
-                )
-            ax2.set_ylim(0, max_y_lim)
-            ax2.set_xlim(
-                data_hour.index[0],
-                dt.datetime.combine(
-                        data_hour.index[-1], dt.datetime.max.time()
-                        )
-            )
-            ax2.set_yticks(y_ticks)
-
-            ax2.set_ylabel("Conc. Potentiellement Réactive")
-            ax2.yaxis.label.set_color('darkorange')
-
-            ax.yaxis.label.set_color('blue')
-            ax.get_lines()[1].remove()
-
     return (fig)
+
+
+def update_COV_plot(
+        poll_iso: str,
+        weight_data: pd.DataFrame,
+        measure_id: str,
+        start_end_dates: list,
+        time: np.array,
+        ax: plt.axes,
+        max_y_lim: float,
+        y_ticks: np.array,
+):
+
+    if poll_iso == 'COVpcop':
+        pcop_annotations(
+            weight_data=weight_data,
+            time_vector=time,
+            measure_id=measure_id,
+            ax=ax,
+            max_y_lim=max_y_lim,
+            poll_iso=poll_iso,
+        )
+        ax.get_lines()[1].remove()
+
+        reactive_data = weight_data[
+            weight_data['id'] == measure_id
+            ]['reactive_value']
+
+        ax.plot(
+            time,
+            reactive_data[time[0]:],
+            color='darkorange',
+            )
+
+        ax.set_ylabel("Conc. Potentiellement Réactive")
+        ax.yaxis.label.set_color('darkorange')
+        ax.get_lines()[0].remove()
+        ax.get_lines()[1].remove()
+
+    else:
+        add_weight_annotations(
+            weight_data=weight_data,
+            time_vector=time,
+            measure_id=measure_id,
+            ax=ax,
+            max_y_lim=max_y_lim,
+            poll_iso=poll_iso,
+        )
+
+        ax2 = ax.twinx()
+
+        reactive_data = weight_data[
+            weight_data['id'] == measure_id
+            ]['reactive_value']
+
+        ax2.plot(
+            time,
+            reactive_data[time[0]:],
+            color='darkorange',
+            )
+        ax2.set_ylim(0, max_y_lim)
+        ax2.set_xlim(
+            start_end_dates[0],
+            dt.datetime.combine(
+                    start_end_dates[1],
+                    dt.datetime.max.time()
+                    )
+        )
+        ax2.set_yticks(y_ticks)
+        ax2.set_ylabel("Conc. Potentiellement Réactive")
+        ax2.yaxis.label.set_color('darkorange')
+        ax.yaxis.label.set_color('blue')
+        ax.get_lines()[0].set_color('blue')
+        ax.get_lines()[1].remove()
 
 
 def add_annotations(
@@ -481,31 +417,25 @@ def add_annotations(
         mode: str,
         agg_data_dir: str,
         ):
-    """_summary_
 
-    Parameters
-    ----------
-    measure_id : str
-        _description_
-    day_data : str
-        _description_
-    time_vector : pd.DatetimeIndex
-        _description_
-    max_y_lim : int
-        _description_
-    ax : plt.axes
-        _description_
-    mode : str
-        _description_
-    """
-    if poll_iso in FAMILY_LIST:
-        value_day_list = get_family_day_max(group, measure_id, agg_data_dir)
+    if poll_iso in FAMILY_LIST or poll_iso in COV_FAMILIES:
+
+        value_day_list = get_family_day_max(
+            poll_iso,
+            group, measure_id,
+            agg_data_dir
+            )
+
         x = time_vector[0]
+
     else:
+
         df_values = day_data[
             day_data['id'] == measure_id
             ][mode]
+
         value_day_list = df_values.to_list()[1:]
+
         x = time_vector[0]
 
     y = max_y_lim - max_y_lim*0.06
@@ -540,20 +470,13 @@ def add_ann_mode(
         mode: str,
         ax: plt.axes,
 ):
-    """_summary_
 
-    Parameters
-    ----------
-    poll_iso : str
-        _description_
-    mode : str
-        _description_
-    """
     x = -1.3
     y = 189
 
-    if poll_iso in FAMILY_LIST:
+    if poll_iso in FAMILY_LIST or poll_iso in COV_FAMILIES:
         x = 85
+
     ax.annotate(
         f"{mode}->",
         xy=(x, y),
@@ -571,31 +494,10 @@ def add_weight_annotations(
         max_y_lim: int,
         poll_iso: str,
         ):
-    """_summary_
 
-    Parameters
-    ----------
-    weight_data : pd.DataFrame
-        _description_
-    time_vector : pd.DatetimeIndex
-        _description_
-    measure_id : str
-        _description_
-    ax : plt.axes
-        _description_
-    max_y_lim : int
-        _description_
-    mode : str
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
     id_data = weight_data[weight_data['id'] == measure_id][time_vector[0]:]
     dtindex = id_data.resample('d')['value'].idxmax()
-    if poll_iso in ['BTEX', 'COVle', 'COVlo']:
+    if poll_iso in COV_FAMILIES:
         drop_col_list = [
             'id', 'id_site', 'phy_name',
             'id_phy', 'value', 'reactive_value',
@@ -627,21 +529,29 @@ def add_weight_annotations(
                 inplace=True
             )
 
-            if poll_iso in ['BTEX', 'COVle', 'COVlo']:
+            if poll_iso in COV_FAMILIES:
+                highest_five = highest_five[
+                    ~highest_five['iso_name'].str.contains("pcop_")
+                    ].sort_values(
+                    by=['weight'],
+                    ascending=False
+                    ).reset_index(drop=True).head(5)
+
                 highest_five['pcop'] = highest_five['iso_name'].apply(
                     lambda iso_name:
                         PCOP_DATA[
                             PCOP_DATA["label"] == iso_name
                             ]['PCOP'].values,
                     )
-
-            highest_five = highest_five.sort_values(
-                by=['weight'],
-                ascending=False
-                ).reset_index(drop=True).head(5)
+            else:
+                highest_five = highest_five.sort_values(
+                    by=['weight'],
+                    ascending=False
+                    ).reset_index(drop=True).head(5)
 
             y_delta = max_y_lim*.09
             y = max_y_lim - y_delta
+
             if len(highest_five.index) > 2:
                 n = 5
             else:
@@ -651,7 +561,7 @@ def add_weight_annotations(
                 weight = highest_five.iloc[i]['weight']
 
                 if poll_iso in ['BTEX', 'COVle', 'COVlo']:
-                    pcop_index = highest_five.iloc[i]['pcop'][0]
+                    pcop_index = highest_five.iloc[i]['pcop']
                     color = get_pcop_index_color(pcop_index)
 
                 else:
@@ -680,19 +590,104 @@ def add_weight_annotations(
     return ()
 
 
+def pcop_annotations(
+        weight_data: pd.DataFrame,
+        time_vector: pd.DatetimeIndex,
+        measure_id: str,
+        ax: plt.axes,
+        max_y_lim: int,
+        poll_iso: str,
+        ):
+
+    id_data = weight_data[weight_data['id'] == measure_id][time_vector[0]:]
+    dtindex = id_data.resample('d')['value'].idxmax()
+    if poll_iso in COV_FAMILIES:
+        drop_col_list = [
+            'id', 'id_site', 'phy_name',
+            'id_phy', 'value', 'reactive_value',
+            'unit',
+            ]
+    else:
+        drop_col_list = [
+            'id', 'id_site', 'phy_name',
+            'id_phy', 'value', 'unit'
+            ]
+
+    x_delta = dt.timedelta(hours=24)
+    x = time_vector[0]
+    x_delta_porcentage = dt.timedelta(hours=5)
+
+    for date_index in dtindex:
+        if pd.isnull(date_index):
+            x = x + x_delta
+        else:
+            filtered_max_w8 = id_data.loc[date_index].drop(drop_col_list)
+
+            highest_five = filtered_max_w8.reset_index()
+            highest_five.index.name = "index"
+            highest_five.rename(
+                columns={
+                    highest_five.columns[0]: "iso_name",
+                    highest_five.columns[1]: "weight"
+                },
+                inplace=True
+            )
+
+            highest_five = highest_five[
+                highest_five['iso_name'].str.contains("pcop_")
+                ].sort_values(
+                by=['weight'],
+                ascending=False
+                ).reset_index(drop=True).head(5)
+
+            highest_five['iso_name'] = (
+                highest_five['iso_name'].str.replace('pcop_', '')
+                )
+
+            highest_five['pcop'] = highest_five['iso_name'].apply(
+                lambda iso_name:
+                    PCOP_DATA[
+                        PCOP_DATA["label"] == iso_name
+                        ]['PCOP'].values,
+                    )
+
+            y_delta = max_y_lim*.09
+            y = max_y_lim - y_delta
+            if len(highest_five.index) > 2:
+                n = 5
+            else:
+                n = 2
+            for i in range(n):
+                iso = highest_five.iloc[i]['iso_name']
+                weight = highest_five.iloc[i]['weight']
+
+                pcop_index = highest_five.iloc[i]['pcop']
+                color = get_pcop_index_color(pcop_index)
+
+                y = y - y_delta
+
+                ax.annotate(
+                    f"{weight*100: .0f}%-",
+                    xy=(x, y),
+                    xycoords='data',
+                    fontsize=8,
+                    color="silver",
+                    weight='bold',
+                )
+
+                ax.annotate(
+                    f"{iso}",
+                    xy=(x+x_delta_porcentage, y),
+                    xycoords='data',
+                    fontsize=8,
+                    color=color,
+                    weight='bold',
+                )
+            x = x + x_delta
+    return ()
+
+
 def get_pcop_index_color(value):
-    """_summary_
-
-    Parameters
-    ----------
-    value : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
     if value <= 25:
         color = "green"
     if 25 <= value <= 75:
@@ -710,21 +705,8 @@ def compute_aggregations(
         reseaux: str,
         physicals: dict,
 ):
-    """_summary_
-
-    Parameters
-    ----------
-    data : pd.DataFrame
-        _description_
-    reseaux : str
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
     iso_family = list(POLL_AGG_LIST[reseaux].keys())
+    cov_family = list(POLL_AGG_LIST['V_COV'].keys())
     weight_data = pd.DataFrame()
 
     for family in iso_family:
@@ -738,7 +720,7 @@ def compute_aggregations(
                 &
                 (data['id_phy'].isin(iso_list_family))
                 ]
-            if family in ['BTEX', 'COVlo', 'COVle']:
+            if family in cov_family:
                 add_pcop_weight(
                     data=filtered_data
                     )
@@ -754,19 +736,26 @@ def compute_aggregations(
                 .replace(0, np.nan)
                 .to_frame()
             )
-            if family in ['BTEX', 'COVlo', 'COVle']:
+
+            for head in list(filtered_data['id_phy'].unique()):
+                head_data = filtered_data[filtered_data['id_phy'] == head]
+                agg_data = head_data.groupby(head_data.index).sum()
+                w8 = agg_data['value']/weights['value']
+                weights[physicals[head]['label']] = w8.values
+
+            if family in cov_family:
                 weights["reactive_value"] = (
                     filtered_data['value_w8_pcop']
                     .groupby(filtered_data.index)
                     .sum()
                     .replace(0, np.nan)
+                    .to_frame()
                 )
-
-            for head in list(filtered_data['id_phy'].unique()):
-                head_data = filtered_data[filtered_data['id_phy'] == head]
-                head_data = head_data.groupby(head_data.index).sum()
-                w8 = head_data['value']/weights['value']
-                weights[physicals[head]['label']] = w8.values
+                for head in list(filtered_data['id_phy'].unique()):
+                    head_data = filtered_data[filtered_data['id_phy'] == head]
+                    agg_data = head_data.groupby(head_data.index).sum()
+                    w8 = agg_data['value_w8_pcop']/weights['reactive_value']
+                    weights[f"pcop_{physicals[head]['label']}"] = w8.values
 
             add_poll_info(
                 data=weights,
@@ -775,7 +764,7 @@ def compute_aggregations(
                 new_col={
                     'id_phy': family,
                     'id': f"{family}{site}",
-                    'phy_name': INFOPOLS[family]['nom']
+                    'phy_name': INFOPOLS[family]['nom'],
                     }
                 )
             weight_data = pd.concat([weight_data, weights], sort=False)
@@ -789,13 +778,6 @@ def compute_aggregations(
 def add_pcop_weight(
         data: pd.DataFrame,
 ):
-    """_summary_
-
-    Parameters
-    ----------
-    data : pd.DataFrame
-        _description_
-    """
     data['value_w8_pcop'] = data.apply(
         lambda row: (
             row['value']*(
@@ -803,6 +785,11 @@ def add_pcop_weight(
                 )/100
             )[0],
         axis=1,
+        )
+    data['pcop'] = data.apply(
+        lambda row: (
+            PCOP_DATA[PCOP_DATA['id'] == row['id_phy']]['PCOP'].values/100)[0],
+        axis=1
         )
     return (data)
 
@@ -930,6 +917,7 @@ def get_figure_title(
 
 
 def get_family_day_max(
+        poll_iso: str,
         group: str,
         measure_id: str,
         agg_data_dir: str,
@@ -948,17 +936,26 @@ def get_family_day_max(
     pd.DataFrame
         _description_
     """
+
     agg_data = pd.read_csv(
         f"{agg_data_dir}/data/{group}_agg_weights.csv",
         parse_dates=['date'],
-        )
+    )
+
     data_measure_id = agg_data[agg_data['id'] == measure_id]
 
-    day_maxes = (
-        data_measure_id['value']
-        .groupby(data_measure_id.date.dt.day)
-        .max()
-        )
+    if poll_iso == 'COVpcop':
+        day_maxes = (
+            data_measure_id['reactive_value']
+            .groupby(data_measure_id.date.dt.day)
+            .max()
+            )
+    else:
+        day_maxes = (
+            data_measure_id['value']
+            .groupby(data_measure_id.date.dt.day)
+            .max()
+            )
 
     return (day_maxes.values[1:])
 

@@ -219,20 +219,21 @@ if __name__ == "__main__":
                     test_values = group_data[group_data['id'] == id]['value']
                     units = group_data[group_data['id'] == id]['unit'].unique()
                     if ~pd.isnull(test_values).all():
-                        desc = "".join(
-                            [
-                                f"Processing {poll_iso} ",
-                                "for sites ",
-                                f"in group {group} ..."
-                            ]
-                            )
-                        print(desc, end='\r')
 
                         site_name, dept_code = get_figure_title(
                             group_data,
                             group_sites,
                             id
                         )
+
+                        desc = "".join(
+                            [
+                                f"Processing {poll_iso} ",
+                                f"for {site_name} ",
+                                f"in group {group} ..."
+                            ]
+                            )
+                        print(desc, end='\r')
 
                         # ---------------------------------------------------------
                         # Build graph for measurement

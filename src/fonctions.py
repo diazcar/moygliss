@@ -943,17 +943,17 @@ def get_family_day_max(
     )
 
     data_measure_id = agg_data[agg_data['id'] == measure_id]
-
+    # Corriger la transition des mois
     if poll_iso == 'COVpcop':
         day_maxes = (
             data_measure_id['reactive_value']
-            .groupby(data_measure_id.date.dt.day)
+            .groupby(data_measure_id.date.dt.date)
             .max()
             )
     else:
         day_maxes = (
             data_measure_id['value']
-            .groupby(data_measure_id.date.dt.day)
+            .groupby(data_measure_id.date.dt.date)
             .max()
             )
 

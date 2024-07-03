@@ -232,8 +232,9 @@ if __name__ == "__main__":
                                 f"for {site_name} ",
                                 f"in group {group} ..."
                             ]
-                            )
-                        print(desc, end='\r')
+                        )
+
+                        print(desc)
 
                         # ---------------------------------------------------------
                         # Build graph for measurement

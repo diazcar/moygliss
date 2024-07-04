@@ -197,7 +197,7 @@ INFOPOLS = {
         "ann": "max",
     },
     'COVle': {
-        "nom": "COV Légères",
+        "nom": "COV Légers",
         "lim1": None,
         "lim2": None,
         "lim3": None,

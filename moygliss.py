@@ -217,8 +217,7 @@ if __name__ == "__main__":
                 for id in measure_id:
                     if (
                         poll_iso in ['24', '39']
-                        and 'BD' in id
-                        or 'PM' in id
+                        and 'BD' or 'PM' in id
                     ):
                         continue
                     else:

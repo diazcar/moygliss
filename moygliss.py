@@ -216,10 +216,12 @@ if __name__ == "__main__":
             if len(measure_id) > 0:
                 for id in measure_id:
                     if (
-                        poll_iso in ['24', '39']
-                        and 'BD' or 'PM' in id
+                        poll_iso in ['24', '39'] and 'BD' in id
+                        or poll_iso in ['24', '39'] and 'PM' in id
+                        or poll_iso in ['68'] and 'B1' in id
                     ):
                         continue
+
                     else:
                         test_values = group_data[group_data['id'] == id]['value']
                         units = group_data[group_data['id'] == id]['unit'].unique()

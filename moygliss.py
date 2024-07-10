@@ -219,7 +219,7 @@ if __name__ == "__main__":
                         poll_iso in ['24', '39', '68']
                         and 'BD' in id
                         or 'PM' in id
-                        ):
+                    ):
                         continue
                     else:
                         test_values = group_data[group_data['id'] == id]['value']

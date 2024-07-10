@@ -215,60 +215,70 @@ if __name__ == "__main__":
             # Loop of measurements(by site) of the iso in the group
             if len(measure_id) > 0:
                 for id in measure_id:
+                    if (
+                        poll_iso in ['24', '39', '68']
+                        and 'BD' in id
+                        or 'PM' in id
+                        ):
+                        continue
+                    else:
+                        test_values = group_data[group_data['id'] == id]['value']
+                        units = group_data[group_data['id'] == id]['unit'].unique()
+                        if ~pd.isnull(test_values).all():
 
-                    test_values = group_data[group_data['id'] == id]['value']
-                    units = group_data[group_data['id'] == id]['unit'].unique()
-                    if ~pd.isnull(test_values).all():
+                            site_name, dept_code = get_figure_title(
+                                group_data,
+                                group_sites,
+                                id
+                            )
 
-                        site_name, dept_code = get_figure_title(
-                            group_data,
-                            group_sites,
-                            id
-                        )
-
-                        desc = "".join(
-                            [
-                                f"Processing {poll_iso} ",
-                                f"for {site_name} ",
-                                f"in group {group} ..."
-                            ]
-                        )
-
-                        print(desc)
-
-                        # ---------------------------------------------------------
-                        # Build graph for measurement
-                        plot = build_mpl_graph(
-                                group=group,
-                                poll_iso=poll_iso,
-                                measure_id=id,
-                                site_name=site_name,
-                                dept_code=dept_code,
-                                units=units,
-                                hourly_data=group_data,
-                                day_data=group_moymax_data,
-                                weight_data=weight_data,
-                                max_y_lim=max_y_lim,
-                                y_ticks=y_ticks,
-                                agg_data_dir=args.output,
-                        )
-
-                        # ---------------------------------------------------------
-                        # Save figure
-                        file_name = ".".join(
-                            [
-                                "moygliss24h",
-                                group,
-                                f"{dept_code} {site_name}",
-                                poll_iso,
-                                "png"
+                            desc = "".join(
+                                [
+                                    f"Processing {poll_iso} ",
+                                    f"for {site_name}({id}) ",
+                                    f"in group {group} ..."
                                 ]
-                        )
+                            )
 
-                        file_out = f"{args.output}/output/{file_name}"
-                        list_of_files.append(file_name)
-                        plot.savefig(file_out)
-                        matplotlib.pyplot.close()
+                            print(desc)
+
+                            # ---------------------------------------------------------
+                            # Build graph for measurement
+
+                            plot = build_mpl_graph(
+                                    group=group,
+                                    poll_iso=poll_iso,
+                                    measure_id=id,
+                                    site_name=site_name,
+                                    dept_code=dept_code,
+                                    units=units,
+                                    hourly_data=group_data,
+                                    day_data=group_moymax_data,
+                                    weight_data=weight_data,
+                                    max_y_lim=max_y_lim,
+                                    y_ticks=y_ticks,
+                                    agg_data_dir=args.output,
+                            )
+
+                            # ---------------------------------------------------------
+                            # Save figure
+                            file_name = ".".join(
+                                [
+                                    "moygliss24h",
+                                    group,
+                                    f"{dept_code} {site_name}",
+                                    poll_iso,
+                                    "png"
+                                    ]
+                            )
+
+                            file_out = f"{args.output}/output/{file_name}"
+                            list_of_files.append(file_name)
+                            if plot is None:
+                                continue
+                            else:
+                                plot.savefig(file_out)
+                            matplotlib.pyplot.close()
 
     with open(f"{args.output}/output/list", 'w') as f:
         for file in list_of_files:

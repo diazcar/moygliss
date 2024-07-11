@@ -249,7 +249,7 @@ def build_mpl_graph(
     fig = plt.figure(figsize=(x_fig_size, y_fig_size))
 
     ax = fig.add_axes(
-            [0.12, 0.12, 0.8, 0.8],
+            [0.13, 0.12, 0.8, 0.8],
             facecolor=background_color
             )
 
@@ -894,7 +894,7 @@ def get_figure_title(
     _type_
         _description_
     """
-    if "MOBILE" in id:
+    if "MOBILE" in id.upper():
         name = group_data[
             group_data['id'] == id
             ]['id_site'].values[0]
@@ -1061,8 +1061,8 @@ def add_color_use_cases(
                     and
                     max_gliss >= INFOPOLS[poll_iso]['lim1']
                 ):
-                    ax.update({'facecolor': (1, 0, 0, 0.05)})
                     ax.get_lines()[1].set_color('red')
+                    ax.update({'facecolor': (1, 0, 0, 0.05)})
 
                 if (
                     INFOPOLS[poll_iso]['lim1'] is not None

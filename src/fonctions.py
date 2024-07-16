@@ -473,7 +473,7 @@ def add_ann_mode(
         ax: plt.axes,
 ):
 
-    x = -1.3
+    x = -1.1
     y = 189
 
     if poll_iso in FAMILY_LIST or poll_iso in COV_FAMILIES:

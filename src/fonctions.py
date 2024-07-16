@@ -249,7 +249,7 @@ def build_mpl_graph(
     fig = plt.figure(figsize=(x_fig_size, y_fig_size))
 
     ax = fig.add_axes(
-            [0.13, 0.12, 0.8, 0.8],
+            [0.16, 0.12, 0.8, 0.8],
             facecolor=background_color
             )
 
@@ -273,6 +273,8 @@ def build_mpl_graph(
     ax.xaxis.set_minor_locator(dates.HourLocator(byhour=12))
     ax.xaxis.set_major_formatter(ticker.NullFormatter())
     ax.xaxis.set_minor_formatter(dates.DateFormatter('%d %b'))
+    if poll_iso == "T3":
+        ax.tick_params(labelsize=7)
     ax.set_yticks(y_ticks)
     ax.set_ylim(0, max_y_lim)
     ax.set_xlim(

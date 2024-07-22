@@ -170,6 +170,14 @@ INFOPOLS = {
         "max": None,  # val_DCE_max', '10
         "ann": "mean",
     },
+    "H8": {
+        "nom": "1,2-Dichloroethylène",
+        "lim1": 5,
+        "lim2": None,
+        "lim3": None,
+        "max": None,  # val_DCE_max', '10
+        "ann": "mean",
+    },
     "05": {
         "nom": "H2S",
         "lim1": 150,
@@ -227,7 +235,7 @@ INFOPOLS = {
         "lim3": None,
         "max": None,
         "ann": "max",
-    },
+    }
 }
 
 METAUX_LOURDS = ['9G', '9I', '9P', '9Q', '9R', '9S', '9T', '9U', '9V',
@@ -251,7 +259,7 @@ ALL_COV = [
     'V2', 'V1', 'V7', 'Ut', 'WH', 'VI', 'VK', 'VF', 'W7',
     'VL', 'O3', 'O7', 'OC', 'WD', 'V5', 'WI', 'V4', 'VQ',
     'VA', 'VU', 'VV', 'H9', 'OA', 'H3', 'H4', 'R2', 'QA',
-    'WB', 'WD', 'VE', 'R4', 'VR', 'VS', 'VT', 'VG', 'W6', 
+    'WB', 'WD', 'VE', 'R4', 'VR', 'VS', 'VT', 'VG', 'W6',
     'VX', 'VH', 'Vd', 'VC',
     ]  # 49
 

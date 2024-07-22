@@ -99,7 +99,7 @@ def request_xr(
         f"groups={groups}&"
         f"measures={measures}"
     )
-
+    print(url)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
 
@@ -772,7 +772,7 @@ def compute_aggregations(
             weight_data = pd.concat([weight_data, weights], sort=False)
 
     data = pd.concat([data, weight_data], join='inner')
-    data = data[~data.id_phy.isin(iso_list_family)]
+    # data = data[~data.id_phy.isin(iso_list_family)]
 
     return (data, weight_data)
 

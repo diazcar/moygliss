@@ -45,7 +45,7 @@ INFOPOLS = {
     "08": {
         "nom": "O3",
         "lim1": 180,
-        "lim2": 240,  # 240? 
+        "lim2": 240,  # 240?
         "lim3": 200,
         "max": None,
         "ann": "max",
@@ -71,7 +71,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  
+        "max": None,
         "ann": "mean",
     },
     "VQ": {
@@ -79,7 +79,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": 140,
-        "max": None,  
+        "max": None,
         "ann": "mean",
     },
     "VU": {
@@ -87,7 +87,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  #
+        "max": None,
         "ann": "mean",
     },
     "VV": {
@@ -95,7 +95,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  
+        "max": None,
         "ann": "mean",
     },
     # "V6": {
@@ -103,7 +103,7 @@ INFOPOLS = {
     #     "lim1": 5,
     #     "lim2": None,
     #     "lim3": None
-    #     "max": None,  
+    #     "max": None,
     #     "ann": "mean",
     # },
     # "V9": {
@@ -119,7 +119,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None, 
+        "max": None,
         "ann": "mean",
     },
     "OA": {
@@ -135,7 +135,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": 140,
-        "max": None,  # 
+        "max": None,
         "ann": "mean",
     },
     "T3": {
@@ -151,7 +151,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  # 
+        "max": None,
         "ann": "mean",
     },
     "0N": {

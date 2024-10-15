@@ -32,7 +32,7 @@ INFOPOLS = {
         "lim2": None,
         "lim3": 5,
         "max": None,
-        "ann": "mean",
+        "ann": "max",
     },
     'GB': {
         "nom": "BC Fuel Fossil",
@@ -40,7 +40,7 @@ INFOPOLS = {
         "lim2": None,
         "lim3": 15,
         "max": None,
-        "ann": "mean",
+        "ann": "max",
     },
     "08": {
         "nom": "O3",

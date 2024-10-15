@@ -1092,6 +1092,7 @@ def add_color_use_cases(
                     if poll_iso == "H2S":
                         ax.get_lines()[0].set_color('green')
                     else:
-                        ax.get_lines()[0].set_color('red')
+                        ax.get_lines()[0].set_color('darkviolet')
+                        ax.get_lines()[0].set(alpha=1)
 
                         

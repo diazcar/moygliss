@@ -14,7 +14,7 @@ INFOPOLS = {
         "nom": "PM2.5",
         "lim1": 15,
         "lim2": 25,
-        "lim3": 5,
+        "lim3": 170,
         "max": 60,
         "ann": "mean",
     },
@@ -26,26 +26,26 @@ INFOPOLS = {
         "max": 60,
         "ann": "mean",
     },
-    # 'GA': {
-    #     "nom": "BC Wood Burnning",
-    #     "lim1": None,
-    #     "lim2": None,
-    #     "lim3": None
-    #     "max": None,
-    #     "ann": "mean",
-    # },
-    # 'GB': {
-    #     "nom": "BC Fuel Fossil",
-    #     "lim1": None,
-    #     "lim2": None,
-    #     "lim3": None
-    #     "max": None,
-    #     "ann": "mean",
-    # },
+    'GA': {
+        "nom": "BC Wood Burnning",
+        "lim1": None,
+        "lim2": None,
+        "lim3": 5,
+        "max": None,
+        "ann": "mean",
+    },
+    'GB': {
+        "nom": "BC Fuel Fossil",
+        "lim1": None,
+        "lim2": None,
+        "lim3": 15,
+        "max": None,
+        "ann": "mean",
+    },
     "08": {
         "nom": "O3",
         "lim1": 180,
-        "lim2": None,  # 240? 
+        "lim2": 240,  # 240? 
         "lim3": 200,
         "max": None,
         "ann": "max",
@@ -53,7 +53,7 @@ INFOPOLS = {
     "03": {
         "nom": "NO2",
         "lim1": 200,
-        "lim2": None,  # 400 ?
+        "lim2": 400,  # 400 ?
         "lim3": 170,
         "max": None,
         "ann": "max",
@@ -224,7 +224,7 @@ INFOPOLS = {
         "nom": "Black Carbon",
         "lim1": None,
         "lim2": None,
-        "lim3": None,
+        "lim3": 15,
         "max": None,
         "ann": "max",
     },

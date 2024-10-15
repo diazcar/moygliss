@@ -6,15 +6,15 @@ INFOPOLS = {
         "nom": "PM10",
         "lim1": 50,
         "lim2": 80,
-        "lim3": 400,
+        "lim3": 460,  # 400 ancienne?
         "max": 100,
         "ann": "mean",
     },
     "39": {
         "nom": "PM2.5",
         "lim1": 15,
-        "lim2": None,
-        "lim3": None,
+        "lim2": 25,
+        "lim3": 5,
         "max": 60,
         "ann": "mean",
     },
@@ -22,7 +22,7 @@ INFOPOLS = {
         "nom": "PM1",
         "lim1": 12,
         "lim2": None,
-        "lim3": None,
+        "lim3": 130,
         "max": 60,
         "ann": "mean",
     },
@@ -30,7 +30,7 @@ INFOPOLS = {
     #     "nom": "BC Wood Burnning",
     #     "lim1": None,
     #     "lim2": None,
-    #     "lim3": None,
+    #     "lim3": None
     #     "max": None,
     #     "ann": "mean",
     # },
@@ -38,32 +38,32 @@ INFOPOLS = {
     #     "nom": "BC Fuel Fossil",
     #     "lim1": None,
     #     "lim2": None,
-    #     "lim3": None,
+    #     "lim3": None
     #     "max": None,
     #     "ann": "mean",
     # },
     "08": {
         "nom": "O3",
         "lim1": 180,
-        "lim2": 240,
-        "lim3": None,
-        "max": None,  # val_O3_max', '10
+        "lim2": None,  # 240? 
+        "lim3": 200,
+        "max": None,
         "ann": "max",
     },
     "03": {
         "nom": "NO2",
         "lim1": 200,
-        "lim2": 400,
-        "lim3": None,
-        "max": None,  # val_NO2_max', '10
+        "lim2": None,  # 400 ?
+        "lim3": 170,
+        "max": None,
         "ann": "max",
     },
     "01": {
         "nom": "SO2",
         "lim1": 125,
         "lim2": None,
-        "lim3": None,
-        "max": None,  # val_SO2_max', '10
+        "lim3": 210,
+        "max": None,
         "ann": "max",
     },
     "V4": {
@@ -71,15 +71,15 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  # val_BENZENE_max', '10
+        "max": None,  
         "ann": "mean",
     },
     "VQ": {
         "nom": "Toluene",
         "lim1": 5,
         "lim2": None,
-        "lim3": None,
-        "max": None,  # val_TOLUENE_max', '10
+        "lim3": 140,
+        "max": None,  
         "ann": "mean",
     },
     "VU": {
@@ -87,7 +87,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  # val_MPXYLENE_max', '10
+        "max": None,  #
         "ann": "mean",
     },
     "VV": {
@@ -95,23 +95,23 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  # val_OXYLENE_max', '10
+        "max": None,  
         "ann": "mean",
     },
     # "V6": {
     #     "nom": "n-Butane",
     #     "lim1": 5,
     #     "lim2": None,
-    #     "lim3": None,
-    #     "max": None,  # val_NBUTANE_max', '10
+    #     "lim3": None
+    #     "max": None,  
     #     "ann": "mean",
     # },
     # "V9": {
     #     "nom": "Ethylene",
     #     "lim1": 5,
     #     "lim2": None,
-    #     "lim3": None,
-    #     "max": 10,  # val_ETHYLENE_max', '10
+    #     "lim3": None
+    #     "max": 10,  #
     #     "ann": "mean",
     # },
     "VB": {
@@ -119,7 +119,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  # val_FORMAL_max', '10
+        "max": None, 
         "ann": "mean",
     },
     "OA": {
@@ -127,23 +127,23 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  # val_CYCLO_max', '10
+        "max": None,
         "ann": "mean",
     },
     "V0": {
         "nom": "1,3-Butadiene",
         "lim1": 5,
         "lim2": None,
-        "lim3": None,
-        "max": None,  # val_BUTADIENE_max', '10
+        "lim3": 140,
+        "max": None,  # 
         "ann": "mean",
     },
     "T3": {
         "nom": "NbParticule",
         "lim1": 10000,
         "lim2": None,
-        "lim3": None,
-        "max": None,  # val_NbP_max', '10
+        "lim3": 100000,
+        "max": None,
         "ann": "mean",
     },
     "VA": {
@@ -151,7 +151,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  # val_ETHYLBENZ_max', '10
+        "max": None,  # 
         "ann": "mean",
     },
     "0N": {
@@ -159,7 +159,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  # val_CVM_max', '10
+        "max": 280,
         "ann": "mean",
     },
     "H9": {
@@ -167,7 +167,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  # val_DCE_max', '10
+        "max": None,
         "ann": "mean",
     },
     "H8": {
@@ -175,7 +175,7 @@ INFOPOLS = {
         "lim1": 5,
         "lim2": None,
         "lim3": None,
-        "max": None,  # val_DCE_max', '10
+        "max": None,
         "ann": "mean",
     },
     "05": {
@@ -185,7 +185,7 @@ INFOPOLS = {
         # seuil nuissance olfactive (7 µg/m3) sur une demi-heure
         # (nuisance olfactive) OMS(2000))
         "lim3": 7,
-        "max": None,  # val_H2S', '10
+        "max": None,
         "ann": "max",
     },
     'ML': {
@@ -295,7 +295,7 @@ POLL_AGG_LIST = {
         'BTEX': {
             'sites': ['FSCB', 'BETG', 'MLVR',
                       'MOBILE_14', 'PDBL', 'PENHUV',
-                      'RBRT'],
+                      'RBRT', 'MOBILE_15'],
             'iso_list': BTEX
         },
         'COVle': {

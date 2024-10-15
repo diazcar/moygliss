@@ -1051,11 +1051,14 @@ def add_color_use_cases(
 
     else:
         for lim in ['lim1', 'lim2', 'lim3']:
+
+            lim_colors = dict(lim1='red', lim2='red', lim3='darkviolet')
+
             if lim in list(INFOPOLS[poll_iso].keys()):
                 ax.plot(
                         y_ax,
                         [INFOPOLS[poll_iso][lim],] * (x_ax_len),
-                        'red',
+                        lim_colors[lim],
                         ls='--'
                 )
                 if (
@@ -1086,4 +1089,9 @@ def add_color_use_cases(
                     and
                     max_jour_j >= INFOPOLS[poll_iso]['lim3']
                 ):
-                    ax.get_lines()[0].set_color('green')
+                    if poll_iso == "H2S":
+                        ax.get_lines()[0].set_color('green')
+                    else:
+                        ax.get_lines()[0].set_color('red')
+
+                        

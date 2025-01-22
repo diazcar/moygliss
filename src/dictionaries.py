@@ -274,7 +274,7 @@ POLL_AGG_LIST = {
         'BC': {
             'sites': ['GAPCOM', 'ARSON',
                       'CINQAV', 'MOBILE_12',
-                      'RABATA'
+                      'RABATA', 'PLOMBIERES'
                       ],
             'iso_list': BLACK_CARBON,
         }

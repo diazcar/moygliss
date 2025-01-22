@@ -220,6 +220,7 @@ if __name__ == "__main__":
                         or poll_iso in ['24', '39'] and 'PM' in id
                         or poll_iso in ['68'] and 'B1' in id
                         or poll_iso in ['39'] and 'B2' in id
+                        or 'eBC' in id
                     ):
                         continue
 

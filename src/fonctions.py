@@ -191,12 +191,12 @@ def add_poll_info(
         columns: list,
         new_col: dict = None,
         ) -> pd.DataFrame:
-
-    for head in columns:
-        data.insert(
-            0,
-            head, site_info[head].iloc[0]
-            )
+    if columns:
+        for head in columns:
+            data.insert(
+                0,
+                head, site_info[head].iloc[0]
+                )
     if new_col:
         for head in new_col:
             data.insert(
@@ -762,11 +762,13 @@ def compute_aggregations(
             add_poll_info(
                 data=weights,
                 site_info=filtered_data,
-                columns=['unit', 'id_site'],
+                columns=None,
                 new_col={
+                    'id_site': site,
                     'id_phy': family,
                     'id': f"{family}{site}",
                     'phy_name': INFOPOLS[family]['nom'],
+                    'unit': 'µg/m3',
                     }
                 )
             weight_data = pd.concat([weight_data, weights], sort=False)

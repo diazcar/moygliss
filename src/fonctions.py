@@ -243,6 +243,7 @@ def build_mpl_graph(
 
     x_fig_size = 4
     y_fig_size = 3
+
     if poll_iso in FAMILY_LIST or poll_iso in COV_FAMILIES:
         x_fig_size = 13
 
@@ -306,6 +307,7 @@ def build_mpl_graph(
             mode=INFOPOLS[poll_iso]["ann"],
             agg_data_dir=agg_data_dir
             )
+
     if poll_iso in COV_FAMILIES:
         update_COV_plot(
             poll_iso=poll_iso,
@@ -727,7 +729,7 @@ def compute_aggregations(
                     data=filtered_data
                     )
 
-            if family == 'ML':
+            if family in ['MLPM1', 'MLPM10']:
                 filtered_data['value'] = filtered_data['value']/1000
                 filtered_data['unit'] = 'μg/m3'
 
@@ -782,19 +784,19 @@ def compute_aggregations(
 def add_pcop_weight(
         data: pd.DataFrame,
 ):
-    data['value_w8_pcop'] = data.apply(
-        lambda row: (
-            row['value']*(
-                PCOP_DATA[PCOP_DATA['id'] == row['id_phy']]['PCOP'].values
-                )/100
-            )[0],
-        axis=1,
-        )
-    data['pcop'] = data.apply(
-        lambda row: (
-            PCOP_DATA[PCOP_DATA['id'] == row['id_phy']]['PCOP'].values/100)[0],
-        axis=1
-        )
+    if data.empty:
+        data['pcop'] = None
+        data['value_w8_pcop'] = None
+    else:
+        data['pcop'] = data.apply(
+            lambda row: (
+                PCOP_DATA[PCOP_DATA['id'] == row['id_phy']]['PCOP'].values/100)[0],
+            axis=1
+            )
+        data['value_w8_pcop'] = data.apply(
+            lambda row: (row['value']*row['pcop']),
+            axis=1,
+            )
     return (data)
 
 

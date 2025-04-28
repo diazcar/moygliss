@@ -188,8 +188,16 @@ INFOPOLS = {
         "max": None,
         "ann": "max",
     },
-    'ML': {
-        "nom": "Métaux Lourds",
+    'MLPM1': {
+        "nom": "Métaux Lourds in PM1",
+        "lim1": None,
+        "lim2": None,
+        "lim3": None,
+        "max": None,
+        "ann": "max",
+    },
+    'MLPM10': {
+        "nom": "Métaux Lourds in PM10",
         "lim1": None,
         "lim2": None,
         "lim3": None,
@@ -238,10 +246,15 @@ INFOPOLS = {
     }
 }
 
-METAUX_LOURDS = ['9G', '9I', '9P', '9Q', '9R', '9S', '9T', '9U', '9V',
-                 '9W', '9X', '9Y', '9a', '9c', '9d', '9e', '9g', '3Z',
-                 '9h', '9i', '9p', '9q', '9s', '9u', '9v',]
+METAUX_LOURDS_PM1 = ['9G', '9I', '9P', '9Q', '9R', '9S', '9T', '9U', '9V',
+                     '9W', '9X', '9Y', '9a', '9c', '9d', '9e', '9g', '3Z',
+                     '9h', '9i', '9p', '9q', '9s', '9u', '9v',]
 
+METAUX_LOURDS_PM10 = ['14', '19', '2t', '2y', '3B', '3C', '3E', '3J', '3K',
+                      '3O', '3T', '3U', '3W', '3Y', '3Z', '3a', '4D', '4J',
+                      '4K', '4O', '4Q', '79', '80', '82', '83', '84', '85',
+                      '86', '87', '88', '90', '91', '92', '93', '94', '96',
+                      '9J', 'B2']
 BTEX = ['V4', 'VQ', 'VA', 'VU',  'VV',]  # 5
 
 COV_LEGERES = ['V6', 'VD', 'V0', '0N', 'V9', 'V8', 'VP',
@@ -265,7 +278,7 @@ ALL_COV = [
 
 BLACK_CARBON = ['GA', 'GB']
 
-FAMILY_LIST = ['ML', 'BC']
+FAMILY_LIST = ['MLPM1', 'MLPM10', 'BC']
 
 COV_FAMILIES = ['BTEX', 'COVle', 'COVlo', 'COVpcop']
 
@@ -280,15 +293,15 @@ POLL_AGG_LIST = {
         }
     },
     'V_MART': {
-        'ML': {
+        'MLPM1': {
             'sites': ['FSCB'],
-            'iso_list': METAUX_LOURDS
+            'iso_list': METAUX_LOURDS_PM1
         },
     },
     'V_MARS': {
-        'ML': {
+        'MLPM10': {
             'sites': ['CINQAV'],
-            'iso_list': METAUX_LOURDS
+            'iso_list': METAUX_LOURDS_PM10
             },
         },
     'V_COV': {

@@ -420,6 +420,6 @@ DATA_KEYS = {
     "measures": "measures",
 }
 
-GROUP_LIST = ["DIDON", "XLBC", "V_NICE", "V_MARS", "V_MART", "V_COV"]
+GROUP_LIST = ["DIDON", "V_NICE", "V_MARS", "V_MART", "V_COV"]
 
 PCOP_DATA = pd.read_csv("./data/cov_pcop.csv", delimiter=';')

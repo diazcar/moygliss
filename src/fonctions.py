@@ -692,6 +692,8 @@ def pcop_annotations(
 
 
 def get_pcop_index_color(value):
+    if not value:
+        color = "gray"
     if value <= 25:
         color = "green"
     if 25 <= value <= 75:

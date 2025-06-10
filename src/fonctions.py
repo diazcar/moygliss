@@ -1098,5 +1098,3 @@ def add_color_use_cases(
                     else:
                         ax.get_lines()[0].set_color('darkviolet')
                         ax.get_lines()[0].set(alpha=1)
-
-                        

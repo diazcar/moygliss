@@ -283,12 +283,23 @@ FAMILY_LIST = ['MLPM1', 'MLPM10', 'BC']
 COV_FAMILIES = ['BTEX', 'COVle', 'COVlo', 'COVpcop']
 
 POLL_AGG_LIST = {
+    'XLBC': {
+        'BC': {
+                'sites': ['GAPCOM', 'ARSON',
+                          'CINQAV', 'MOBILE_12',
+                          'RABATA', 'PLOMBIERES',
+                          'MOBILE_13'
+                ],
+                'iso_list': BLACK_CARBON,
+        }
+    },
     'DIDON': {
         'BC': {
             'sites': ['GAPCOM', 'ARSON',
                       'CINQAV', 'MOBILE_12',
-                      'RABATA', 'PLOMBIERES'
-                      ],
+                      'RABATA', 'PLOMBIERES',
+                      'MOBILE_13'
+            ],
             'iso_list': BLACK_CARBON,
         }
     },
@@ -409,6 +420,6 @@ DATA_KEYS = {
     "measures": "measures",
 }
 
-GROUP_LIST = ["DIDON", "V_NICE", "V_MARS", "V_MART", "V_COV"]
+GROUP_LIST = ["DIDON", "XLBC", "V_NICE", "V_MARS", "V_MART", "V_COV"]
 
 PCOP_DATA = pd.read_csv("./data/cov_pcop.csv", delimiter=';')

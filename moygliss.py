@@ -131,7 +131,7 @@ if __name__ == "__main__":
                 columns=['id_site', 'id_phy', 'phy_name'],
             )
             group_data = pd.concat([group_data, data_chunk])
-
+        group_data.to_csv('./group_data_log.csv')
         # ---------------------------------------------------------------------
         # Add iso familly aggregations and build table wiht iso's weights
         weight_data = None
@@ -154,6 +154,7 @@ if __name__ == "__main__":
 
             # Save Family members weights
             weight_data.to_csv(f"{args.output}/data/{group}_agg_weights.csv")
+        group_data.to_csv('./group_data_agg_log.csv')
 
         # ---------------------------------------------------------------------
         # Compute daily means and max and build table with poll-site-info
@@ -220,7 +221,6 @@ if __name__ == "__main__":
                         or poll_iso in ['24', '39'] and 'PM' in id
                         or poll_iso in ['68'] and 'B1' in id
                         or poll_iso in ['39'] and 'B2' in id
-                        or 'eBC' in id
                     ):
                         continue
 
@@ -235,6 +235,8 @@ if __name__ == "__main__":
                                 id
                             )
 
+                            if "ç" in site_name:
+                                site_name = site_name.replace("ç", "c")
                             desc = "".join(
                                 [
                                     f"Processing {poll_iso} ",
@@ -247,7 +249,6 @@ if __name__ == "__main__":
 
                             # ---------------------------------------------------------
                             # Build graph for measurement
-
                             plot = build_mpl_graph(
                                     group=group,
                                     poll_iso=poll_iso,
@@ -276,7 +277,11 @@ if __name__ == "__main__":
                             )
 
                             file_out = f"{args.output}/output/{file_name}"
-                            list_of_files.append(file_name)
+                            if file_name in list_of_files:
+                                continue
+                            else:
+                                list_of_files.append(file_name)
+
                             if plot is None:
                                 continue
                             else:

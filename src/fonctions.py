@@ -740,8 +740,6 @@ def compute_aggregations(
                     ~filtered_data['id'].str.contains('|'.join(['eBC']))
                     ]
 
-                filtered_data.to_csv(f'local/debuging/filtered_bc_data_{site}.csv')
-
             weights = (
                 filtered_data['value']
                 .groupby(filtered_data.index)

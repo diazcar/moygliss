@@ -131,7 +131,7 @@ if __name__ == "__main__":
                 columns=['id_site', 'id_phy', 'phy_name'],
             )
             group_data = pd.concat([group_data, data_chunk])
-        group_data.to_csv('./group_data_log.csv')
+
         # ---------------------------------------------------------------------
         # Add iso familly aggregations and build table wiht iso's weights
         weight_data = None
@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
             # Save Family members weights
             weight_data.to_csv(f"{args.output}/data/{group}_agg_weights.csv")
-        group_data.to_csv('./group_data_agg_log.csv')
+
 
         # ---------------------------------------------------------------------
         # Compute daily means and max and build table with poll-site-info

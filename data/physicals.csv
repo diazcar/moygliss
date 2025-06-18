@@ -147,8 +147,8 @@
 145,G7,eBC940,Black Carbon 940 nm
 146,G8,BCwb,Contribution Comb. Biomasse
 147,G9,k6,Coef de Compensation a 880 nm
-148,GA,eqBCWB,Conc eqBC issu de wb (AE33)
-149,GB,eqBCFF,Conc eqBC issu de FF (AE33)
+148,GA,eqBCWB,Wood Burning
+149,GB,eqBCFF,Fuel Fossil
 150,H3,C2HCl3,Trichloroethène
 151,H4,C2Cl4,Tetrachloroethène
 152,H8,C2H2Cl2,"1,2-Dichloroéthylène"

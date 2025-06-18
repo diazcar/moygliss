@@ -735,6 +735,13 @@ def compute_aggregations(
                 filtered_data['value'] = filtered_data['value']/1000
                 filtered_data['unit'] = 'μg/m3'
 
+            if family in ['BC']:
+                filtered_data = filtered_data[
+                    ~filtered_data['id'].str.contains('|'.join(['eBC']))
+                    ]
+
+                filtered_data.to_csv(f'local/debuging/filtered_bc_data_{site}.csv')
+
             weights = (
                 filtered_data['value']
                 .groupby(filtered_data.index)
@@ -742,13 +749,13 @@ def compute_aggregations(
                 .replace(0, np.nan)
                 .to_frame()
             )
-
+            
             for head in list(filtered_data['id_phy'].unique()):
                 head_data = filtered_data[filtered_data['id_phy'] == head]
                 agg_data = head_data.groupby(head_data.index).sum()
                 w8 = agg_data['value']/weights['value']
                 weights[physicals[head]['label']] = w8.values
-
+            
             if family in cov_family:
                 weights["reactive_value"] = (
                     filtered_data['value_w8_pcop']

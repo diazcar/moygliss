@@ -420,6 +420,7 @@ def add_annotations(
         ax: plt.axes,
         mode: str,
         agg_data_dir: str,
+        color:str ='gray'
         ):
 
     if poll_iso in FAMILY_LIST or poll_iso in COV_FAMILIES:
@@ -442,7 +443,7 @@ def add_annotations(
 
         x = time_vector[0]
 
-    y = max_y_lim - max_y_lim*0.06
+    y = max_y_lim - max_y_lim*0.05
 
     add_ann_mode(
         poll_iso=poll_iso,
@@ -451,6 +452,18 @@ def add_annotations(
     )
 
     for max in value_day_list:
+
+        if mode == 'max':
+            if (
+                max > INFOPOLS[poll_iso]['lim1']
+                or max > INFOPOLS[poll_iso]['lim2']
+                or max > INFOPOLS[poll_iso]['lim3']
+            ):
+                color = 'red'
+                fontsize = 9
+            else:
+                color = 'gray'
+                fontsize = 8
 
         if ~np.isnan(max):
             if max > 10:
@@ -461,8 +474,8 @@ def add_annotations(
                     string,
                     xy=(x, y),
                     xycoords='data',
-                    fontsize=8,
-                    color='grey',
+                    fontsize=fontsize,
+                    color=color,
             )
             x = x + dt.timedelta(hours=24)
         else:

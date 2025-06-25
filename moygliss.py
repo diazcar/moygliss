@@ -204,7 +204,7 @@ if __name__ == "__main__":
                 measure_id=measure_id,
                 group_data=group_data
                 )
-            max_y_lim = max_val + max_val*0.15
+            max_y_lim = max_val + max_val*0.17
             step = pas_du_range(
                 val_end=max_val,
                 nbr_ysticks=10,

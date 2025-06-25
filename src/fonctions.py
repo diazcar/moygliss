@@ -453,19 +453,28 @@ def add_annotations(
 
     for max in value_day_list:
 
-        if mode == 'max':
+
+        if ~np.isnan(max):
+                    
+            color = 'gray'
+            fontsize = 8
+
             if (
+                INFOPOLS[poll_iso]['lim1'] is not None
+                and
                 max > INFOPOLS[poll_iso]['lim1']
-                or max > INFOPOLS[poll_iso]['lim2']
-                or max > INFOPOLS[poll_iso]['lim3']
+
             ):
                 color = 'red'
                 fontsize = 9
-            else:
-                color = 'gray'
-                fontsize = 8
+            elif (
+                INFOPOLS[poll_iso]['lim2'] is not None
+                and
+                max > INFOPOLS[poll_iso]['lim2']
+            ):
+                color = 'red'
+                fontsize = 9                
 
-        if ~np.isnan(max):
             if max > 10:
                 string = f"{max: .0f}"
             else:
